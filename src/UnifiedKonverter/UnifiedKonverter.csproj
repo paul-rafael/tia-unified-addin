@@ -1,0 +1,109 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Unified-Konverter – TIA-Portal-Add-In
+    Bauen:  .\build.ps1 -TiaVersion 20   bzw.   .\build.ps1 -TiaVersion 21
+    oder:   msbuild UnifiedKonverter.csproj -p:TiaVersion=21 -p:Configuration=Release
+    Je TIA-Version ist ein eigener Build nötig (V20- und V21-Bibliotheken sind nicht kompatibel).
+  -->
+
+  <PropertyGroup>
+    <TiaVersion Condition="'$(TiaVersion)' == ''">20</TiaVersion>
+    <TargetFramework>net48</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <LangVersion>7.3</LangVersion>
+    <AssemblyName>UnifiedKonverter</AssemblyName>
+    <RootNamespace>Prh.UnifiedKonverter</RootNamespace>
+    <Version>0.1.0</Version>
+    <Authors>Paul-Rafael Hasan-Man</Authors>
+    <Product>Unified-Konverter</Product>
+    <Copyright>Paul-Rafael Hasan-Man</Copyright>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+    <OutputPath>bin\V$(TiaVersion)\$(Configuration)\</OutputPath>
+    <IntermediateOutputPath>obj\V$(TiaVersion)\$(Configuration)\</IntermediateOutputPath>
+    <DefineConstants>$(DefineConstants);TIA_V$(TiaVersion)</DefineConstants>
+    <!-- true: fertiges .addin nach %APPDATA%\Siemens\Automation\Portal Vxx\UserAddIns kopieren -->
+    <InstallAddIn Condition="'$(InstallAddIn)' == ''">true</InstallAddIn>
+  </PropertyGroup>
+
+  <!-- TIA-Portal-Installationsordner: Registry (nur Visual-Studio-MSBuild), sonst Standardpfad. Überschreibbar mit -p:TiaPortalDir=... -->
+  <PropertyGroup Condition="'$(TiaPortalDir)' == '' And '$(MSBuildRuntimeType)' == 'Full'">
+    <TiaPortalDir>$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Siemens\Automation\_InstalledSW\TIAP$(TiaVersion)\EditionMain', 'Path', null, RegistryView.Registry64))</TiaPortalDir>
+  </PropertyGroup>
+  <PropertyGroup>
+    <TiaPortalDir Condition="'$(TiaPortalDir)' == ''">$(ProgramW6432)\Siemens\Automation\Portal V$(TiaVersion)\</TiaPortalDir>
+    <TiaPortalDir>$([MSBuild]::EnsureTrailingSlash('$(TiaPortalDir)'))</TiaPortalDir>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TiaVersion)' == '20'">
+    <TiaApiDir>$(TiaPortalDir)PublicAPI\V20.AddIn\</TiaApiDir>
+    <TiaPublisherExe>$(TiaApiDir)Siemens.Engineering.AddIn.Publisher.exe</TiaPublisherExe>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TiaVersion)' == '21'">
+    <TiaApiDir>$(TiaPortalDir)PublicAPI\V21\net48\</TiaApiDir>
+    <TiaPublisherExe>$(TiaPortalDir)PublicAPI\V21\Siemens.Engineering.AddIn.Publisher.exe</TiaPublisherExe>
+  </PropertyGroup>
+
+  <!-- V20: eine Bibliothek mit Add-In-API und Objektmodell -->
+  <ItemGroup Condition="'$(TiaVersion)' == '20'">
+    <Reference Include="Siemens.Engineering.AddIn">
+      <HintPath>$(TiaApiDir)Siemens.Engineering.AddIn.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!-- V21: aufgeteilte Bibliotheken; eingebunden wird nur, was in der Installation vorhanden ist -->
+  <ItemGroup Condition="'$(TiaVersion)' == '21'">
+    <Reference Include="Siemens.Engineering.AddIn.Base">
+      <HintPath>$(TiaApiDir)Siemens.Engineering.AddIn.Base.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Siemens.Engineering.Base">
+      <HintPath>$(TiaApiDir)Siemens.Engineering.Base.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Siemens.Engineering.WinCC" Condition="Exists('$(TiaApiDir)Siemens.Engineering.WinCC.dll')">
+      <HintPath>$(TiaApiDir)Siemens.Engineering.WinCC.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Siemens.Engineering.WinCCUnified" Condition="Exists('$(TiaApiDir)Siemens.Engineering.WinCCUnified.dll')">
+      <HintPath>$(TiaApiDir)Siemens.Engineering.WinCCUnified.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Siemens.Engineering.AddIn.WinCC" Condition="Exists('$(TiaApiDir)Siemens.Engineering.AddIn.WinCC.dll')">
+      <HintPath>$(TiaApiDir)Siemens.Engineering.AddIn.WinCC.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Siemens.Engineering.AddIn.WinCCUnified" Condition="Exists('$(TiaApiDir)Siemens.Engineering.AddIn.WinCCUnified.dll')">
+      <HintPath>$(TiaApiDir)Siemens.Engineering.AddIn.WinCCUnified.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Publisher\*.xml" />
+  </ItemGroup>
+
+  <Target Name="CheckTiaApi" BeforeTargets="ResolveAssemblyReferences">
+    <Error Condition="'$(TiaVersion)' != '20' And '$(TiaVersion)' != '21'" Text="TiaVersion muss 20 oder 21 sein (angegeben: $(TiaVersion))." />
+    <Error Condition="!Exists('$(TiaApiDir)')" Text="TIA-Portal-API nicht gefunden: $(TiaApiDir) – bitte den Installationsordner angeben, z. B. -p:TiaPortalDir=&quot;D:\Siemens\Automation\Portal V$(TiaVersion)\&quot;" />
+  </Target>
+
+  <!-- Nach dem Bauen: .addin-Paket erzeugen (Siemens-Publisher) und optional installieren -->
+  <Target Name="PackAddIn" AfterTargets="Build" Condition="'$(OS)' == 'Windows_NT'">
+    <PropertyGroup>
+      <_OutAbs>$([System.IO.Path]::GetFullPath('$(ProjectDir)$(OutDir)'))</_OutAbs>
+      <AddInPackage>$(_OutAbs)Unified-Konverter_V$(TiaVersion).addin</AddInPackage>
+      <UserAddInsDir>$(APPDATA)\Siemens\Automation\Portal V$(TiaVersion)\UserAddIns\</UserAddInsDir>
+    </PropertyGroup>
+    <Error Condition="!Exists('$(TiaPublisherExe)')" Text="Publisher nicht gefunden: $(TiaPublisherExe)" />
+    <Copy SourceFiles="$(ProjectDir)Publisher\AddInPublisherConfig.V$(TiaVersion).xml" DestinationFiles="$(_OutAbs)AddInPublisherConfig.xml" />
+    <Delete Files="$(AddInPackage)" />
+    <Exec Command="&quot;$(TiaPublisherExe)&quot; -f &quot;$(_OutAbs)AddInPublisherConfig.xml&quot; -l &quot;$(_OutAbs)Publisher.log&quot; -v -c -o &quot;$(AddInPackage)&quot;" />
+    <Copy Condition="'$(InstallAddIn)' == 'true'" SourceFiles="$(AddInPackage)" DestinationFolder="$(UserAddInsDir)" />
+    <Message Importance="high" Text="Add-In-Paket: $(AddInPackage)" />
+    <Message Importance="high" Condition="'$(InstallAddIn)' == 'true'" Text="Installiert nach: $(UserAddInsDir)" />
+  </Target>
+
+</Project>

@@ -1,0 +1,8 @@
+bin/
+obj/
+.vs/
+*.user
+*.addin
+Publisher.log
+TestResults/
+.DS_Store
