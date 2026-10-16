@@ -10,7 +10,9 @@ Gilt für Version 0.1 (Machbarkeitstest). Dauer: etwa 20 Minuten beim ersten Mal
 
 ## 02 · Projekt auf den Windows-Rechner holen
 
-Der Ordner liegt noch nicht auf GitHub. Kopiere den Ordner `tia-unified-addin` per USB oder OneDrive, z. B. nach `C:\Projekte\tia-unified-addin`.
+Mit Git: `git clone https://github.com/paul-rafael/tia-unified-addin.git C:\Projekte\tia-unified-addin`
+
+Ohne Git: auf [github.com/paul-rafael/tia-unified-addin](https://github.com/paul-rafael/tia-unified-addin) **Code → Download ZIP**, entpacken z. B. nach `C:\Projekte\tia-unified-addin`. Danach Rechtsklick auf `build.ps1` → Eigenschaften → „Zulassen“ anhaken, falls angeboten.
 
 ## 03 · Bauen
 
