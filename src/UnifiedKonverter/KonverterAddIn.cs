@@ -46,12 +46,13 @@ namespace Prh.UnifiedKonverter
 
             try
             {
+                // Mit dem Recht TIA.ReadOnly verweigert TIA das Setzen von ExclusiveAccess.Text
+                // („not permitted in a read-only context“) – daher nur Sperre und Abbruch, kein Fortschrittstext.
                 using (ExclusiveAccess access = _tiaPortal.ExclusiveAccess())
                 {
                     foreach (IEngineeringObject table in tables)
                     {
                         if (access.IsCancellationRequested) break;
-                        access.Text = "Variablen werden gelesen: " + HmiObjects.NameOf(table);
                         snapshots.Add(TagTableReader.Read(table));
                     }
                 }

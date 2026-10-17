@@ -14,7 +14,7 @@ Diese Datei trennt klar zwischen **belegt** (Siemens-Doku oder öffentlicher Sie
 | Paket | `.addin`-Datei, erzeugt mit `Siemens.Engineering.AddIn.Publisher.exe` aus DLL + Konfigurations-XML | belegt |
 | Ablage | `%APPDATA%\Siemens\Automation\Portal Vxx\UserAddIns` (pro Benutzer, ohne Adminrechte); Firmen-Rollout über `C:\ProgramData\…\CorporateAddIns` | belegt (V21-Doku) |
 | Aktivierung | einzeln in der Taskkarte **Add-Ins**; dabei werden die angeforderten Rechte angezeigt | belegt |
-| Rechte | `TIA.ReadOnly` oder `TIA.ReadWrite`, zusätzlich Systemrechte (z. B. Dateizugriff) | belegt (`TIA.ReadWrite` aus Siemens-Code); `TIA.ReadOnly` wird im Test bestätigt |
+| Rechte | `TIA.ReadOnly` oder `TIA.ReadWrite`, zusätzlich Systemrechte (z. B. Dateizugriff) | belegt: `TIA.ReadWrite` (Siemens-Code), `TIA.ReadOnly` (eigener Test V20, 17.10.2026). Im Nur-Lesen-Modus verweigert TIA sogar `ExclusiveAccess.Text` – der Schutz greift also wirklich |
 | Kontextmenü | `ProjectTreeAddInProvider` → `ContextMenuAddIn` → `AddActionItem<T>(Text, Aktion, Status)`; Status `Enabled` / `Disabled` / `Hidden` | belegt |
 | Objektmodell | Im Add-In steht das **volle Openness-Objektmodell** zur Verfügung (dieselben Typen wie bei externen Openness-Programmen) | belegt (Siemens-Beispiele lesen Bausteine, HMI-Variablen und Meldungen) |
 | Laufzeitumgebung | Add-Ins laufen in einem **eigenen Prozess** neben TIA; Fenster (WinForms/WPF) sind möglich | belegt |
