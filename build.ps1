@@ -31,10 +31,19 @@ if ($NoInstall) { $props += '-p:InstallAddIn=false' }
 if ($msbuild) {
   Write-Host "MSBuild: $msbuild"
   & $msbuild $project -restore -nologo -v:minimal @props
-} elseif (Get-Command dotnet -ErrorAction SilentlyContinue) {
-  Write-Host 'Visual Studio nicht gefunden – baue mit dotnet.'
-  & dotnet build $project -nologo -v:minimal @props
 } else {
-  throw 'Weder Visual Studio (MSBuild) noch das .NET SDK gefunden. Bitte Visual Studio 2022 mit „.NET-Desktopentwicklung“ installieren.'
+  # dotnet.exe gibt es oft nur als Laufzeit (ohne SDK) – dann bricht „dotnet build“ mit Exit-Code -2147450735 ab.
+  $sdks = $null
+  if (Get-Command dotnet -ErrorAction SilentlyContinue) { $sdks = & dotnet --list-sdks 2>$null }
+  if (-not $sdks) {
+    throw @'
+Kein Build-Werkzeug gefunden: weder Visual Studio (MSBuild) noch ein .NET SDK.
+Am einfachsten das .NET SDK installieren (danach PowerShell neu öffnen):
+    winget install Microsoft.DotNet.SDK.8
+Alternativ Visual Studio 2022 Community mit der Workload ".NET-Desktopentwicklung".
+'@
+  }
+  Write-Host 'Visual Studio nicht gefunden – baue mit dem .NET SDK.'
+  & dotnet build $project -nologo -v:minimal @props
 }
 if ($LASTEXITCODE -ne 0) { throw "Build fehlgeschlagen (Exit-Code $LASTEXITCODE)." }

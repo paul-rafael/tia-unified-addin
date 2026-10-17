@@ -6,7 +6,9 @@ Gilt für Version 0.1 (Machbarkeitstest). Dauer: etwa 20 Minuten beim ersten Mal
 
 - TIA Portal **V20** und/oder **V21** mit installiertem **TIA Portal Openness** (bei der TIA-Installation auswählbar)
 - Windows-Benutzer in der Gruppe **Siemens TIA Openness** (nach dem Hinzufügen einmal ab- und wieder anmelden)
-- **Visual Studio 2022 Community** mit der Workload **„.NET-Desktopentwicklung“**. Im Visual Studio Installer unter „Einzelne Komponenten“ prüfen, ob **„.NET Framework 4.8 – Zielpaket“** angehakt ist.
+- Ein Build-Werkzeug, eins von beiden reicht:
+  - **.NET SDK 8** (am schnellsten): `winget install Microsoft.DotNet.SDK.8`, danach PowerShell neu öffnen. Der erste Build lädt einmalig ein NuGet-Paket aus dem Internet.
+  - **Visual Studio 2022 Community** mit der Workload **„.NET-Desktopentwicklung“**
 
 ## 02 · Projekt auf den Windows-Rechner holen
 

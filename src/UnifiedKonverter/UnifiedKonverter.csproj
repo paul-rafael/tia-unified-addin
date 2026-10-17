@@ -85,6 +85,11 @@
     <None Include="Publisher\*.xml" />
   </ItemGroup>
 
+  <!-- .NET-Framework-4.8-Referenzen aus NuGet: so baut auch das reine .NET SDK ohne Visual Studio / Developer Pack -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+
   <Target Name="CheckTiaApi" BeforeTargets="ResolveAssemblyReferences">
     <Error Condition="'$(TiaVersion)' != '20' And '$(TiaVersion)' != '21'" Text="TiaVersion muss 20 oder 21 sein (angegeben: $(TiaVersion))." />
     <Error Condition="!Exists('$(TiaApiDir)')" Text="TIA-Portal-API nicht gefunden: $(TiaApiDir) – bitte den Installationsordner angeben, z. B. -p:TiaPortalDir=&quot;D:\Siemens\Automation\Portal V$(TiaVersion)\&quot;" />
