@@ -117,7 +117,7 @@ namespace Prh.UnifiedKonverter.Rules
 
         private static string Visible(string chars)
         {
-            return chars.Replace(" ", "Leerzeichen ").Replace("\t", "Tab ").Trim();
+            return string.Join(" ", chars.Select(c => c == ' ' ? "Leerzeichen" : c == '\t' ? "Tab" : c.ToString()));
         }
     }
 }

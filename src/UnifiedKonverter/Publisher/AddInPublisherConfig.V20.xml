@@ -2,12 +2,12 @@
 <PackageConfiguration xmlns="http://www.siemens.com/automation/Openness/AddIn/Publisher/V20">
   <Author>Paul-Rafael Hasan-Man</Author>
   <AddInVersion>V20</AddInVersion>
-  <Description>Bereitet alte HMI-Geräte (Comfort/Advanced) für die Migration nach WinCC Unified vor: prüft Variablen und benennt sie nach Bestätigung um. Ohne Bestätigung wird nichts geändert.</Description>
+  <Description>Migration nach WinCC Unified: bereitet alte HMI-Geräte (Comfort/Advanced) vor und überträgt Variablen, Textlisten und Bitmeldungen in eine Unified-HMI. Geändert wird nur nach Bestätigung.</Description>
 
   <Product>
     <Name>Unified-Konverter</Name>
     <Id>prh-unified-konverter</Id>
-    <Version>0.2.0</Version>
+    <Version>0.3.0</Version>
   </Product>
 
   <FeatureAssembly>

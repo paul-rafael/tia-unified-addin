@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Prh.UnifiedKonverter.Openness;
 using Prh.UnifiedKonverter.Rules;
+using Prh.UnifiedKonverter.Transfer;
 using Prh.UnifiedKonverter.Ui;
 using Siemens.Engineering;
 using Siemens.Engineering.AddIn;
@@ -17,6 +18,7 @@ namespace Prh.UnifiedKonverter
     /// <summary>
     /// Kontextmenü „Unified-Konverter“ an der alten HMI (Gerät), am Ordner „HMI-Variablen“ oder an Variablentabellen.
     /// Schritt 1 „Für Unified vorbereiten“: prüfen, Vorschau, Umbenennen erst nach Bestätigung.
+    /// Schritt 3 „Zu Unified übertragen“: Variablen, Textlisten, Bitmeldungen in eine gewählte Unified-HMI.
     /// </summary>
     public sealed class KonverterAddIn : ContextMenuAddIn
     {
@@ -30,6 +32,7 @@ namespace Prh.UnifiedKonverter
         protected override void BuildContextMenuItems(ContextMenuAddInRoot addInRootSubmenu)
         {
             addInRootSubmenu.Items.AddActionItem<IEngineeringObject>("Für Unified vorbereiten …", OnPrepare, OnPrepareStatus);
+            addInRootSubmenu.Items.AddActionItem<IEngineeringObject>("Zu Unified übertragen …", OnTransfer, OnPrepareStatus);
         }
 
         private MenuStatus OnPrepareStatus(MenuSelectionProvider<IEngineeringObject> menuSelectionProvider)
@@ -76,6 +79,72 @@ namespace Prh.UnifiedKonverter
                     form.ShowDialog();
                 }
             });
+        }
+
+        private void OnTransfer(MenuSelectionProvider<IEngineeringObject> menuSelectionProvider)
+        {
+            List<IEngineeringObject> selection = menuSelectionProvider.GetSelection<IEngineeringObject>().ToList();
+            SourceData source = new SourceData();
+            List<UnifiedTarget> targets;
+            IEngineeringObject project;
+
+            IEngineeringObject hmi = HmiObjects.FindHmiIn(selection);
+            if (hmi == null || hmi.GetType().Name != "HmiTarget")
+            {
+                UiThread.Run(() => MessageForm.ShowInfo("Bitte die alte HMI wählen",
+                    "„Zu Unified übertragen“ startet an der alten HMI (Comfort/Advanced): mit der rechten Maustaste auf das Gerät klicken.\n\n" +
+                    "Die Ziel-Unified-HMI wählst du danach im Fenster aus."));
+                return;
+            }
+
+            try
+            {
+                using (ExclusiveAccess access = _tiaPortal.ExclusiveAccess())
+                {
+                    access.Text = "Unified-Konverter: alte HMI wird gelesen …";
+                    source.Tags = new TagTableReader().Read(new[] { hmi }, () => access.IsCancellationRequested);
+                    ProjectChecks.Run(source.Tags);
+                    SourceReader.ReadTextLists(hmi, source);
+                    SourceReader.ReadAlarmsFromOpenness(hmi, source);
+                    project = ProjectScan.FindProject(hmi);
+                    targets = ProjectScan.FindUnifiedTargets(project)
+                        .GroupBy(t => t.ToString()).Select(g => g.First()).ToList();
+                }
+            }
+            catch (Exception ex)
+            {
+                UiThread.Run(() => MessageForm.ShowError("Lesen fehlgeschlagen", ex.ToString()));
+                return;
+            }
+
+            string sourceName = HmiObjects.NameOf(hmi);
+            UiThread.Run(() =>
+            {
+                using (TransferForm form = new TransferForm(sourceName, source, targets, (description, body) => RunWriting(project, description, body)))
+                {
+                    form.ShowDialog();
+                }
+            });
+        }
+
+        /// <summary>Schreibt unter ExclusiveAccess und in einer Transaktion – in TIA mit einem „Rückgängig“ zurücknehmbar.</summary>
+        private void RunWriting(IEngineeringObject project, string description, Action<Func<bool>> body)
+        {
+            using (ExclusiveAccess access = _tiaPortal.ExclusiveAccess())
+            {
+                access.Text = "Unified-Konverter: " + description + " …";
+                ITransactionSupport transactionSupport = project as ITransactionSupport;
+                if (transactionSupport == null)
+                {
+                    body(() => access.IsCancellationRequested);
+                    return;
+                }
+                using (Transaction transaction = access.Transaction(transactionSupport, description))
+                {
+                    body(() => access.IsCancellationRequested);
+                    transaction.CommitOnDispose();
+                }
+            }
         }
     }
 }
