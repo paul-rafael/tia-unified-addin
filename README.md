@@ -23,6 +23,7 @@ Unterstützt: **TIA Portal V20 und V21**, je ein eigener Build.
 - [docs/PLAN.md](docs/PLAN.md) – Ablauf Schritt 1–3, Stand und nächste Schritte
 - [docs/MACHBARKEIT.md](docs/MACHBARKEIT.md) – was die Add-In-API für Comfort/Advanced und Unified lesen und ändern kann, mit Einschränkungen
 - [docs/BAUEN_UND_TESTEN.md](docs/BAUEN_UND_TESTEN.md) – bauen, installieren und testen, Schritt für Schritt
+- Projektstand, Entscheidungen und Log außerhalb des Repos: Obsidian-Vault, `Projekte/TIA-Unified-AddIn/Übersicht.md` und `Log.md`
 
 ## Kurzanleitung
 
