@@ -8,92 +8,69 @@ using Prh.UnifiedKonverter.Openness;
 namespace Prh.UnifiedKonverter.Report
 {
     /// <summary>
-    /// Schreibt den Bericht des Machbarkeitstests nach Dokumente\Unified-Konverter\Berichte\&lt;Zeitstempel&gt;:
-    /// Variablen.csv (alle Attribute je Variable), Attribute.csv (Attribut, Zugriffsart, Beispielwert), Struktur.txt.
-    /// CSV mit Semikolon und UTF-8-BOM, damit deutsches Excel sie direkt öffnet.
+    /// Schreibt den Bericht nach Dokumente\Unified-Konverter\Berichte\&lt;Zeitstempel&gt;:
+    /// Pruefung.csv (alle Variablen mit Unified-Name und Befunden), Attribute.csv (Openness-Attribute je Variablentyp
+    /// mit Zugriffsart), Struktur.txt (Geräte, Tabellen, Kompositionen). CSV mit Semikolon und UTF-8-BOM für deutsches Excel.
     /// </summary>
     internal static class ReportWriter
     {
-        public static string Write(IList<TagTableSnapshot> snapshots)
+        public static string Write(ReadResult result)
         {
             string dir = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
                 "Unified-Konverter", "Berichte", DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss"));
             Directory.CreateDirectory(dir);
 
-            WriteTags(Path.Combine(dir, "Variablen.csv"), snapshots);
-            WriteAttributes(Path.Combine(dir, "Attribute.csv"), snapshots);
-            WriteStructure(Path.Combine(dir, "Struktur.txt"), snapshots);
+            WriteCheck(Path.Combine(dir, "Pruefung.csv"), result);
+            WriteAttributes(Path.Combine(dir, "Attribute.csv"), result);
+            WriteStructure(Path.Combine(dir, "Struktur.txt"), result);
             return dir;
         }
 
-        private static void WriteTags(string path, IList<TagTableSnapshot> snapshots)
+        private static void WriteCheck(string path, ReadResult result)
         {
-            List<string> attrNames = snapshots.SelectMany(s => s.Tags).SelectMany(t => t.Attributes)
-                .Select(a => a.Name).Distinct().ToList();
-
             StringBuilder sb = new StringBuilder();
-            AppendRow(sb, new[] { "Gerät", "Art", "Tabelle", "Variable" }.Concat(attrNames));
-            foreach (TagTableSnapshot s in snapshots)
+            AppendRow(sb, new[] { "Gerät", "Art", "Ordner", "Tabelle", "Name", "Name in Unified", "Datentyp", "Länge", "Verbindung",
+                "PLC-Variable", "Erfassungszyklus", "Erfassungsart", "Stufe", "Hinweise" });
+            foreach (HmiTagInfo t in result.AllTags)
             {
-                foreach (TagRow t in s.Tags)
-                {
-                    IEnumerable<string> values = attrNames.Select(n =>
-                    {
-                        AttributeValue a = t.Attributes.FirstOrDefault(x => x.Name == n);
-                        if (a == null) return string.Empty;
-                        return a.Error != null ? "#FEHLER " + a.Error : a.Value;
-                    });
-                    AppendRow(sb, new[] { s.DeviceName, s.Kind.ToString(), s.TableName, t.Name }.Concat(values));
-                }
+                string level = t.HasWarning ? "Warnung" : t.Findings.Count > 0 ? "Info" : "";
+                AppendRow(sb, new[] { t.Table.Device.Name, t.Table.Device.KindText, t.Table.Folder, t.Table.Name, t.Name, t.UnifiedName,
+                    t.DataType, t.Length, t.Connection, t.PlcTag, t.AcquisitionCycle, t.AcquisitionMode, level,
+                    string.Join(" · ", t.Findings.Select(f => f.Text)) });
             }
             File.WriteAllText(path, sb.ToString(), new UTF8Encoding(true));
         }
 
-        private static void WriteAttributes(string path, IList<TagTableSnapshot> snapshots)
+        private static void WriteAttributes(string path, ReadResult result)
         {
             StringBuilder sb = new StringBuilder();
             AppendRow(sb, new[] { "Art", "Variablentyp", "Attribut", "Zugriff", "Beispielwert", "Lesefehler" });
-            foreach (IGrouping<string, TagRow> group in snapshots
-                .SelectMany(s => s.Tags.Select(t => new { s.Kind, Tag = t }))
-                .GroupBy(x => x.Kind + "|" + x.Tag.TypeName, x => x.Tag))
+            foreach (AttributeDump a in result.Attributes.OrderBy(x => x.TypeName).ThenBy(x => x.Name))
             {
-                string[] key = group.Key.Split('|');
-                Dictionary<string, AttributeValue> seen = new Dictionary<string, AttributeValue>();
-                foreach (TagRow t in group)
-                {
-                    foreach (AttributeValue a in t.Attributes)
-                    {
-                        AttributeValue existing;
-                        if (!seen.TryGetValue(a.Name, out existing) || (string.IsNullOrEmpty(existing.Value) && !string.IsNullOrEmpty(a.Value)))
-                        {
-                            seen[a.Name] = a;
-                        }
-                    }
-                }
-                foreach (AttributeValue a in seen.Values.OrderBy(x => x.Name))
-                {
-                    AppendRow(sb, new[] { key[0], key[1], a.Name, a.Access, a.Value, a.Error });
-                }
+                AppendRow(sb, new[] { a.DeviceKind, a.TypeName, a.Name, a.Access, a.Value, a.Error });
             }
             File.WriteAllText(path, sb.ToString(), new UTF8Encoding(true));
         }
 
-        private static void WriteStructure(string path, IList<TagTableSnapshot> snapshots)
+        private static void WriteStructure(string path, ReadResult result)
         {
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine("Unified-Konverter 0.1 – Machbarkeitstest (nur lesen)");
+            sb.AppendLine("Unified-Konverter – Schritt 1 „Für Unified vorbereiten“");
             sb.AppendLine("Erstellt: " + DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"));
             sb.AppendLine("Add-In-Prozess: " + (Environment.Is64BitProcess ? "64 Bit" : "32 Bit") + ", .NET " + Environment.Version);
-            foreach (TagTableSnapshot s in snapshots)
+            sb.AppendLine("Lesedauer: " + result.Duration.TotalSeconds.ToString("0.0") + " s");
+            foreach (HmiDeviceInfo d in result.Devices)
             {
                 sb.AppendLine();
-                sb.AppendLine("Tabelle:  " + s.TableName + "  (" + s.TableTypeName + ")");
-                sb.AppendLine("Gerät:    " + (s.DeviceName ?? "nicht gefunden") + "  (" + s.Kind + ")");
-                sb.AppendLine("Variablen: " + s.Tags.Count);
-                sb.AppendLine("Kompositionen des HMI-Geräts: " + string.Join(", ", s.DeviceCompositions));
-                sb.AppendLine("Attribute des HMI-Geräts: " + string.Join(", ", s.DeviceAttributes));
-                foreach (string p in s.Problems) sb.AppendLine("Problem: " + p);
+                sb.AppendLine("HMI-Gerät: " + d.Name + " (" + d.KindText + ")");
+                sb.AppendLine("  Kompositionen: " + string.Join(", ", d.Compositions));
+                sb.AppendLine("  Attribute: " + string.Join(", ", d.Attributes));
+                foreach (HmiTableInfo t in result.Tables.Where(x => x.Device == d))
+                {
+                    sb.AppendLine("  Tabelle: " + (string.IsNullOrEmpty(t.Folder) ? "" : t.Folder + " › ") + t.Name + " – " + t.Tags.Count + " Variablen");
+                    foreach (string p in t.Problems) sb.AppendLine("    Problem: " + p);
+                }
             }
             File.WriteAllText(path, sb.ToString(), new UTF8Encoding(true));
         }

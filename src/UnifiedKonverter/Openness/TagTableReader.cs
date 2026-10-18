@@ -1,124 +1,190 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Siemens.Engineering;
 
 namespace Prh.UnifiedKonverter.Openness
 {
-    public sealed class AttributeValue
+    /// <summary>
+    /// Sammelt die HMI-Variablentabellen einer Auswahl (HMI-Gerät, Variablenordner oder einzelne Tabellen)
+    /// und liest die für die Migration relevanten Eigenschaften. Ändert nichts am Projekt.
+    /// </summary>
+    internal sealed class TagTableReader
     {
-        public string Name;
-        /// <summary>Openness-Zugriffsart, z. B. Read oder ReadWrite – zeigt, ob das Attribut per Add-In änderbar ist.</summary>
-        public string Access;
-        public string Value;
-        /// <summary>Fehlermeldung, falls das Lesen fehlschlug.</summary>
-        public string Error;
-    }
+        // Mögliche Attributnamen je Eigenschaft (Comfort/Advanced und Unified heißen teils verschieden).
+        private static readonly string[] DataTypeNames = { "DataType", "DataTypeName" };
+        private static readonly string[] LengthNames = { "Length" };
+        private static readonly string[] ConnectionNames = { "Connection" };
+        private static readonly string[] PlcTagNames = { "PlcTag", "ControllerTag", "PlcName" };
+        private static readonly string[] CycleNames = { "AcquisitionCycle" };
+        private static readonly string[] ModeNames = { "AcquisitionMode" };
 
-    public sealed class TagRow
-    {
-        public string Name;
-        public string TypeName;
-        public List<AttributeValue> Attributes = new List<AttributeValue>();
+        private readonly Dictionary<Type, HashSet<string>> _attributesByType = new Dictionary<Type, HashSet<string>>();
+        private readonly Dictionary<object, HmiDeviceInfo> _devices = new Dictionary<object, HmiDeviceInfo>();
+        private readonly ReadResult _result = new ReadResult();
 
-        /// <summary>Erster vorhandener Wert aus einer Liste möglicher Attributnamen (Classic und Unified heißen teils verschieden).</summary>
-        public string Get(params string[] candidates)
+        /// <summary>Für das spätere Umbenennen: Openness-Objekt je gelesener Variable.</summary>
+        public readonly Dictionary<HmiTagInfo, IEngineeringObject> Sources = new Dictionary<HmiTagInfo, IEngineeringObject>();
+
+        public ReadResult Read(IEnumerable<IEngineeringObject> selection, Func<bool> cancelled)
         {
-            foreach (string c in candidates)
+            Stopwatch watch = Stopwatch.StartNew();
+            List<IEngineeringObject> tables = new List<IEngineeringObject>();
+            HashSet<string> seen = new HashSet<string>(StringComparer.Ordinal);
+            foreach (IEngineeringObject obj in selection)
             {
-                AttributeValue a = Attributes.FirstOrDefault(x => string.Equals(x.Name, c, StringComparison.OrdinalIgnoreCase));
-                if (a != null && a.Error == null) return a.Value;
+                Collect(obj, tables, seen, 0);
             }
-            return null;
+
+            foreach (IEngineeringObject table in tables)
+            {
+                if (cancelled()) break;
+                _result.Tables.Add(ReadTable(table));
+            }
+            _result.Duration = watch.Elapsed;
+            return _result;
         }
-    }
 
-    public sealed class TagTableSnapshot
-    {
-        public string TableName;
-        public string TableTypeName;
-        public string DeviceName;
-        public HmiKind Kind;
-        public List<TagRow> Tags = new List<TagRow>();
-        /// <summary>Kompositionen (z. B. TextLists, DiscreteAlarms) und Attribute des HMI-Geräts – zeigt, was Openness dort anbietet.</summary>
-        public List<string> DeviceCompositions = new List<string>();
-        public List<string> DeviceAttributes = new List<string>();
-        public List<string> Problems = new List<string>();
-    }
-
-    /// <summary>Liest eine HMI-Variablentabelle vollständig aus. Ändert nichts am Projekt.</summary>
-    internal static class TagTableReader
-    {
-        public static TagTableSnapshot Read(IEngineeringObject table)
+        private static void Collect(IEngineeringObject obj, List<IEngineeringObject> tables, HashSet<string> seen, int depth)
         {
-            TagTableSnapshot snap = new TagTableSnapshot
-            {
-                TableName = HmiObjects.NameOf(table),
-                TableTypeName = table.GetType().FullName,
-            };
+            if (obj == null || depth > 40) return;
 
-            IEngineeringObject device = HmiObjects.FindHmiSoftware(table, out snap.Kind);
-            if (device != null)
+            if (HmiObjects.IsHmiTagTable(obj))
             {
-                snap.DeviceName = HmiObjects.NameOf(device);
-                Probe(device, snap);
+                HmiKind kind;
+                IEngineeringObject device = HmiObjects.FindHmiSoftware(obj, out kind);
+                string key = (device == null ? "?" : HmiObjects.NameOf(device)) + "|" + HmiObjects.FolderPath(obj) + "|" + HmiObjects.NameOf(obj);
+                if (seen.Add(key)) tables.Add(obj);
+                return;
             }
+
+            if (HmiObjects.IsDevice(obj))
+            {
+                IEngineeringObject software = HmiObjects.SoftwareOf(obj);
+                if (software != null) Collect(software, tables, seen, depth + 1);
+                foreach (IEngineeringObject item in HmiObjects.Composition(obj, "DeviceItems"))
+                {
+                    Collect(item, tables, seen, depth + 1);
+                }
+                return;
+            }
+
+            if (obj.GetType().Name == "HmiTarget")
+            {
+                IEngineeringObject folder = HmiObjects.Navigate(obj, "TagFolder") as IEngineeringObject;
+                if (folder != null) Collect(folder, tables, seen, depth + 1);
+            }
+
+            if (HmiObjects.IsHmiSoftware(obj) || HmiObjects.IsHmiTagFolder(obj))
+            {
+                foreach (string composition in new[] { "TagTables", "Folders", "Groups", "TagTableGroups" })
+                {
+                    foreach (IEngineeringObject child in HmiObjects.Composition(obj, composition))
+                    {
+                        Collect(child, tables, seen, depth + 1);
+                    }
+                }
+            }
+        }
+
+        private HmiTableInfo ReadTable(IEngineeringObject table)
+        {
+            HmiTableInfo info = new HmiTableInfo
+            {
+                Name = HmiObjects.NameOf(table),
+                Folder = HmiObjects.FolderPath(table),
+                Device = DeviceOf(table),
+            };
 
             foreach (IEngineeringObject tag in HmiObjects.Composition(table, "Tags"))
             {
-                snap.Tags.Add(ReadTag(tag, snap.Problems));
-            }
-            return snap;
-        }
-
-        private static TagRow ReadTag(IEngineeringObject tag, List<string> problems)
-        {
-            TagRow row = new TagRow { Name = HmiObjects.NameOf(tag), TypeName = tag.GetType().FullName };
-            IEnumerable<EngineeringAttributeInfo> infos;
-            try
-            {
-                infos = tag.GetAttributeInfos();
-            }
-            catch (Exception ex)
-            {
-                problems.Add(row.Name + ": Attributliste nicht lesbar – " + ex.Message);
-                return row;
-            }
-
-            foreach (EngineeringAttributeInfo info in infos)
-            {
-                AttributeValue a = new AttributeValue { Name = info.Name, Access = info.AccessMode.ToString() };
                 try
                 {
-                    a.Value = HmiObjects.Format(tag.GetAttribute(info.Name));
+                    HmiTagInfo t = ReadTag(tag, info);
+                    info.Tags.Add(t);
+                    Sources[t] = tag;
                 }
                 catch (Exception ex)
                 {
-                    a.Error = ex.GetType().Name + ": " + ex.Message;
+                    info.Problems.Add("Variable nicht lesbar: " + ex.Message);
                 }
-                row.Attributes.Add(a);
             }
-            return row;
+            return info;
         }
 
-        private static void Probe(IEngineeringObject device, TagTableSnapshot snap)
+        private HmiDeviceInfo DeviceOf(IEngineeringObject table)
         {
-            try
+            HmiKind kind;
+            IEngineeringObject software = HmiObjects.FindHmiSoftware(table, out kind);
+            object key = software == null ? (object)"?" : HmiObjects.NameOf(software);
+            HmiDeviceInfo device;
+            if (_devices.TryGetValue(key, out device)) return device;
+
+            device = new HmiDeviceInfo { Name = software == null ? "?" : HmiObjects.NameOf(software), Kind = kind };
+            if (software != null)
             {
-                snap.DeviceCompositions.AddRange(device.GetCompositionInfos().Select(c => c.Name));
+                try { device.Compositions.AddRange(software.GetCompositionInfos().Select(c => c.Name)); }
+                catch (Exception) { }
+                try { device.Attributes.AddRange(software.GetAttributeInfos().Select(a => a.Name + " (" + a.AccessMode + ")")); }
+                catch (Exception) { }
             }
-            catch (Exception ex)
+            _devices[key] = device;
+            _result.Devices.Add(device);
+            return device;
+        }
+
+        private HmiTagInfo ReadTag(IEngineeringObject tag, HmiTableInfo table)
+        {
+            HashSet<string> available = AvailableAttributes(tag, table.Device);
+            return new HmiTagInfo
             {
-                snap.Problems.Add("Kompositionen des HMI-Geräts nicht lesbar – " + ex.Message);
-            }
-            try
+                Table = table,
+                Name = HmiObjects.NameOf(tag),
+                DataType = Get(tag, available, DataTypeNames),
+                Length = Get(tag, available, LengthNames),
+                Connection = Get(tag, available, ConnectionNames),
+                PlcTag = Get(tag, available, PlcTagNames),
+                AcquisitionCycle = Get(tag, available, CycleNames),
+                AcquisitionMode = Get(tag, available, ModeNames),
+            };
+        }
+
+        private static string Get(IEngineeringObject tag, HashSet<string> available, string[] candidates)
+        {
+            foreach (string name in candidates)
             {
-                snap.DeviceAttributes.AddRange(device.GetAttributeInfos().Select(a => a.Name + " (" + a.AccessMode + ")"));
+                if (!available.Contains(name)) continue;
+                object value;
+                if (HmiObjects.TryGetAttribute(tag, name, out value)) return HmiObjects.Format(value);
             }
-            catch (Exception ex)
+            return null;
+        }
+
+        /// <summary>Attributliste einmal je Variablentyp abfragen; beim ersten Mal alle Werte für die Diagnose mitschreiben.</summary>
+        private HashSet<string> AvailableAttributes(IEngineeringObject tag, HmiDeviceInfo device)
+        {
+            Type type = tag.GetType();
+            HashSet<string> names;
+            if (_attributesByType.TryGetValue(type, out names)) return names;
+
+            names = new HashSet<string>(StringComparer.Ordinal);
+            foreach (EngineeringAttributeInfo info in tag.GetAttributeInfos())
             {
-                snap.Problems.Add("Attribute des HMI-Geräts nicht lesbar – " + ex.Message);
+                names.Add(info.Name);
+                AttributeDump dump = new AttributeDump
+                {
+                    DeviceKind = device.KindText,
+                    TypeName = type.FullName,
+                    Name = info.Name,
+                    Access = info.AccessMode.ToString(),
+                };
+                try { dump.Value = HmiObjects.Format(tag.GetAttribute(info.Name)); }
+                catch (Exception ex) { dump.Error = ex.GetType().Name + ": " + ex.Message; }
+                _result.Attributes.Add(dump);
             }
+            _attributesByType[type] = names;
+            return names;
         }
     }
 }

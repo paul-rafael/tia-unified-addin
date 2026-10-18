@@ -2,12 +2,12 @@
 <PackageConfiguration xmlns="http://www.siemens.com/automation/Openness/AddIn/Publisher/V21">
   <Author>Paul-Rafael Hasan-Man</Author>
   <AddInVersion>V21</AddInVersion>
-  <Description>Prüft HMI-Projekte vor der Unified-Migration und bereinigt Variablen, Textlisten und Meldungen. Version 0.1: Machbarkeitstest, listet die Variablen einer HMI-Variablentabelle auf (nur lesen).</Description>
+  <Description>Bereitet alte HMI-Geräte (Comfort/Advanced) für die Migration nach WinCC Unified vor: prüft Variablen und benennt sie nach Bestätigung um. Ohne Bestätigung wird nichts geändert.</Description>
 
   <Product>
     <Name>Unified-Konverter</Name>
     <Id>prh-unified-konverter</Id>
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
   </Product>
 
   <FeatureAssembly>
@@ -18,11 +18,11 @@
 
   <RequiredPermissions>
     <TIAPermissions>
-      <TIA.ReadOnly/>
+      <TIA.ReadWrite/>
     </TIAPermissions>
     <UnrestrictedPermissions>
       <System.UnrestrictedAccess>
-        <JustificationComment>Speichert den Bericht als CSV-Datei im Ordner Dokumente und öffnet den Ordner im Explorer.</JustificationComment>
+        <JustificationComment>Speichert den Prüfbericht als CSV-Datei im Ordner Dokumente und öffnet den Ordner im Explorer.</JustificationComment>
       </System.UnrestrictedAccess>
     </UnrestrictedPermissions>
   </RequiredPermissions>

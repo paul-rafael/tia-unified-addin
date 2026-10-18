@@ -20,7 +20,10 @@ namespace Prh.UnifiedKonverter.Ui
         public static readonly Font Title = new Font("Segoe UI Semibold", 16f, FontStyle.Regular);
         public static readonly Font Eyebrow = new Font("Segoe UI Semibold", 7.5f, FontStyle.Regular);
         public static readonly Font Small = new Font("Segoe UI", 8.5f, FontStyle.Regular);
-        public static readonly Font Mono = new Font("Consolas", 9f, FontStyle.Regular);
+        public static readonly Font Mono = new Font("Consolas", 9.5f, FontStyle.Regular);
+        public static readonly Font MonoStrong = new Font("Consolas", 9.5f, FontStyle.Bold);
+        public static readonly Font Number = new Font("Segoe UI Semibold", 18f, FontStyle.Regular);
+        public static readonly Font Product = new Font("Segoe UI Semibold", 11f, FontStyle.Regular);
 
         public static Theme Current()
         {
@@ -72,48 +75,6 @@ namespace Prh.UnifiedKonverter.Ui
             return ColorTranslator.FromHtml(hex);
         }
 
-        /// <summary>Hauptbutton: dunkelrot, weiße Schrift. Pro Ansicht nur einer.</summary>
-        public Button PrimaryButton(string text)
-        {
-            Button b = BaseButton(text);
-            b.BackColor = Red;
-            b.ForeColor = Color.White;
-            b.FlatAppearance.BorderColor = Red;
-            b.FlatAppearance.MouseOverBackColor = RedHover;
-            b.FlatAppearance.MouseDownBackColor = RedHover;
-            return b;
-        }
-
-        /// <summary>Ghost-Button: transparent, feiner Rahmen.</summary>
-        public Button GhostButton(string text)
-        {
-            Button b = BaseButton(text);
-            b.BackColor = Bg;
-            b.ForeColor = Text;
-            b.FlatAppearance.BorderColor = BorderStrong;
-            b.FlatAppearance.MouseOverBackColor = InkSoft;
-            b.FlatAppearance.MouseDownBackColor = InkSoft;
-            return b;
-        }
-
-        private static Button BaseButton(string text)
-        {
-            Button b = new Button
-            {
-                Text = text,
-                FlatStyle = FlatStyle.Flat,
-                Font = Strong,
-                AutoSize = true,
-                AutoSizeMode = AutoSizeMode.GrowAndShrink,
-                Padding = new Padding(14, 6, 14, 6),
-                Margin = new Padding(8, 0, 0, 0),
-                Cursor = Cursors.Hand,
-                UseVisualStyleBackColor = false,
-            };
-            b.FlatAppearance.BorderSize = 1;
-            return b;
-        }
-
         public void StyleGrid(DataGridView grid)
         {
             grid.BackgroundColor = Bg;
@@ -123,9 +84,9 @@ namespace Prh.UnifiedKonverter.Ui
             grid.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
             grid.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single;
             grid.RowHeadersVisible = false;
-            grid.ColumnHeadersHeight = 32;
+            grid.ColumnHeadersHeight = 34;
             grid.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
-            grid.RowTemplate.Height = 28;
+            grid.RowTemplate.Height = 32;
 
             grid.ColumnHeadersDefaultCellStyle.BackColor = Surface2;
             grid.ColumnHeadersDefaultCellStyle.ForeColor = Text2;
