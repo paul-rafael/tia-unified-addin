@@ -38,9 +38,12 @@ namespace Prh.UnifiedKonverter
         private MenuStatus OnPrepareStatus(MenuSelectionProvider<IEngineeringObject> menuSelectionProvider)
         {
             // Muss schnell sein (läuft beim Öffnen des Menüs): nur Typen prüfen. Ob ein Gerät eine HMI hat, zeigt erst der Klick.
-            bool fits = menuSelectionProvider.GetSelection<IEngineeringObject>().Any(o =>
-                HmiObjects.IsHmiTagTable(o) || HmiObjects.IsHmiTagFolder(o) || HmiObjects.IsHmiSoftware(o) || HmiObjects.IsDevice(o));
-            return fits ? MenuStatus.Enabled : MenuStatus.Disabled;
+            // Schleife statt Lambda: zwischengespeicherte Lambdas mit TIA-Typen lehnt der Siemens-Publisher ab.
+            foreach (IEngineeringObject o in menuSelectionProvider.GetSelection<IEngineeringObject>())
+            {
+                if (HmiObjects.IsHmiTagTable(o) || HmiObjects.IsHmiTagFolder(o) || HmiObjects.IsHmiSoftware(o) || HmiObjects.IsDevice(o)) return MenuStatus.Enabled;
+            }
+            return MenuStatus.Disabled;
         }
 
         private void OnPrepare(MenuSelectionProvider<IEngineeringObject> menuSelectionProvider)
@@ -54,7 +57,7 @@ namespace Prh.UnifiedKonverter
                 using (ExclusiveAccess access = _tiaPortal.ExclusiveAccess())
                 {
                     access.Text = "Unified-Konverter: HMI-Variablen werden gelesen …";
-                    result = reader.Read(selection, () => access.IsCancellationRequested);
+                    result = reader.Read(selection, CancelCheck(access));
                 }
                 ProjectChecks.Run(result);
             }
@@ -102,7 +105,7 @@ namespace Prh.UnifiedKonverter
                 using (ExclusiveAccess access = _tiaPortal.ExclusiveAccess())
                 {
                     access.Text = "Unified-Konverter: alte HMI wird gelesen …";
-                    source.Tags = new TagTableReader().Read(new[] { hmi }, () => access.IsCancellationRequested);
+                    source.Tags = new TagTableReader().Read(new[] { hmi }, CancelCheck(access));
                     ProjectChecks.Run(source.Tags);
                     SourceReader.ReadTextLists(hmi, source);
                     SourceReader.ReadAlarmsFromOpenness(hmi, source);
@@ -118,9 +121,10 @@ namespace Prh.UnifiedKonverter
             }
 
             string sourceName = HmiObjects.NameOf(hmi);
+            object projectRef = project;
             UiThread.Run(() =>
             {
-                using (TransferForm form = new TransferForm(sourceName, source, targets, (description, body) => RunWriting(project, description, body)))
+                using (TransferForm form = new TransferForm(sourceName, source, targets, (description, body) => RunWriting(projectRef, description, body)))
                 {
                     form.ShowDialog();
                 }
@@ -128,7 +132,7 @@ namespace Prh.UnifiedKonverter
         }
 
         /// <summary>Schreibt unter ExclusiveAccess und in einer Transaktion – in TIA mit einem „Rückgängig“ zurücknehmbar.</summary>
-        private void RunWriting(IEngineeringObject project, string description, Action<Func<bool>> body)
+        private void RunWriting(object project, string description, Action<Func<bool>> body)
         {
             using (ExclusiveAccess access = _tiaPortal.ExclusiveAccess())
             {
@@ -136,15 +140,24 @@ namespace Prh.UnifiedKonverter
                 ITransactionSupport transactionSupport = project as ITransactionSupport;
                 if (transactionSupport == null)
                 {
-                    body(() => access.IsCancellationRequested);
+                    body(CancelCheck(access));
                     return;
                 }
                 using (Transaction transaction = access.Transaction(transactionSupport, description))
                 {
-                    body(() => access.IsCancellationRequested);
+                    body(CancelCheck(access));
                     transaction.CommitOnDispose();
                 }
             }
+        }
+
+        /// <summary>
+        /// Abbruch-Abfrage ohne eingefangene TIA-Typen: Lambdas speichern eingefangene Variablen als Felder,
+        /// und Felder mit TIA-Objekttypen lehnt der Siemens-Publisher (ab V20) ab.
+        /// </summary>
+        private static Func<bool> CancelCheck(object access)
+        {
+            return () => ((ExclusiveAccess)access).IsCancellationRequested;
         }
     }
 }

@@ -54,8 +54,8 @@ namespace Prh.UnifiedKonverter.Openness
         /// <summary>Erster Kompositionsname aus der Liste, den das Objekt anbietet.</summary>
         public static string FirstComposition(IEngineeringObject obj, params string[] candidates)
         {
-            HashSet<string> names;
-            try { names = new HashSet<string>(obj.GetCompositionInfos().Select(c => c.Name), StringComparer.Ordinal); }
+            HashSet<string> names = new HashSet<string>(StringComparer.Ordinal);
+            try { foreach (EngineeringCompositionInfo c in obj.GetCompositionInfos()) names.Add(c.Name); }
             catch (Exception) { return null; }
             return candidates.FirstOrDefault(names.Contains);
         }

@@ -24,8 +24,8 @@ namespace Prh.UnifiedKonverter.Openness
         private readonly Dictionary<object, HmiDeviceInfo> _devices = new Dictionary<object, HmiDeviceInfo>();
         private readonly ReadResult _result = new ReadResult();
 
-        /// <summary>Für das spätere Umbenennen: Openness-Objekt je gelesener Variable.</summary>
-        public readonly Dictionary<HmiTagInfo, IEngineeringObject> Sources = new Dictionary<HmiTagInfo, IEngineeringObject>();
+        /// <summary>Für das spätere Umbenennen: Openness-Objekt je gelesener Variable (als object – Publisher-Regel ab V20).</summary>
+        public readonly Dictionary<HmiTagInfo, object> Sources = new Dictionary<HmiTagInfo, object>();
 
         public ReadResult Read(IEnumerable<IEngineeringObject> selection, Func<bool> cancelled)
         {
@@ -124,9 +124,9 @@ namespace Prh.UnifiedKonverter.Openness
             device = new HmiDeviceInfo { Name = software == null ? "?" : HmiObjects.NameOf(software), Kind = kind };
             if (software != null)
             {
-                try { device.Compositions.AddRange(software.GetCompositionInfos().Select(c => c.Name)); }
+                try { foreach (EngineeringCompositionInfo c in software.GetCompositionInfos()) device.Compositions.Add(c.Name); }
                 catch (Exception) { }
-                try { device.Attributes.AddRange(software.GetAttributeInfos().Select(a => a.Name + " (" + a.AccessMode + ")")); }
+                try { foreach (EngineeringAttributeInfo a in software.GetAttributeInfos()) device.Attributes.Add(a.Name + " (" + a.AccessMode + ")"); }
                 catch (Exception) { }
             }
             _devices[key] = device;

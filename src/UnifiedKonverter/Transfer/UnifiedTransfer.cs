@@ -56,12 +56,18 @@ namespace Prh.UnifiedKonverter.Transfer
     internal sealed class UnifiedTransfer
     {
         private readonly SourceData _source;
-        private readonly IEngineeringObject _target;
+        // Als object gespeichert: Der Siemens-Publisher (ab V20) verbietet Felder mit TIA-Objekttypen.
+        private readonly object _targetRef;
 
         public UnifiedTransfer(SourceData source, UnifiedTarget target)
         {
             _source = source;
-            _target = target.Software;
+            _targetRef = target.Software;
+        }
+
+        private IEngineeringObject Target()
+        {
+            return (IEngineeringObject)_targetRef;
         }
 
         // ── Plan (nur lesen) ────────────────────────────────────────────────────
@@ -71,7 +77,7 @@ namespace Prh.UnifiedKonverter.Transfer
             List<TransferItem> items = new List<TransferItem>();
             if (options.Tags && _source.Tags != null)
             {
-                HashSet<string> existing = Names(_target, "Tags");
+                HashSet<string> existing = Names(Target(), "Tags");
                 foreach (HmiTagInfo tag in _source.Tags.AllTags)
                 {
                     string name = tag.UnifiedName ?? ConverterRules.CleanTagName(tag.Name);
@@ -90,7 +96,7 @@ namespace Prh.UnifiedKonverter.Transfer
             }
             if (options.TextLists)
             {
-                HashSet<string> existing = Names(_target, "TextLists");
+                HashSet<string> existing = Names(Target(), "TextLists");
                 foreach (SourceTextList tl in _source.TextLists)
                 {
                     string name = ConverterRules.CleanTextListName(tl.Name);
@@ -103,7 +109,7 @@ namespace Prh.UnifiedKonverter.Transfer
             }
             if (options.Alarms)
             {
-                HashSet<string> existing = Names(_target, "DiscreteAlarms");
+                HashSet<string> existing = Names(Target(), "DiscreteAlarms");
                 foreach (SourceAlarm alarm in _source.Alarms)
                 {
                     items.Add(new TransferItem
@@ -161,9 +167,9 @@ namespace Prh.UnifiedKonverter.Transfer
 
         private void WriteTag(TransferItem item, HmiTagInfo tag)
         {
-            IEngineeringObject table = EngineeringWrite.Find(_target, "TagTables", tag.Table.Name)
-                ?? EngineeringWrite.Create(_target, "TagTables", tag.Table.Name);
-            IEngineeringObject t = EngineeringWrite.Find(_target, "Tags", item.TargetName)
+            IEngineeringObject table = EngineeringWrite.Find(Target(), "TagTables", tag.Table.Name)
+                ?? EngineeringWrite.Create(Target(), "TagTables", tag.Table.Name);
+            IEngineeringObject t = EngineeringWrite.Find(Target(), "Tags", item.TargetName)
                 ?? EngineeringWrite.Create(table, "Tags", item.TargetName);
             HashSet<string> w = EngineeringWrite.WritableAttributes(t);
 
@@ -177,8 +183,8 @@ namespace Prh.UnifiedKonverter.Transfer
 
         private void WriteTextList(TransferItem item, SourceTextList tl)
         {
-            IEngineeringObject list = EngineeringWrite.Find(_target, "TextLists", item.TargetName)
-                ?? EngineeringWrite.Create(_target, "TextLists", item.TargetName);
+            IEngineeringObject list = EngineeringWrite.Find(Target(), "TextLists", item.TargetName)
+                ?? EngineeringWrite.Create(Target(), "TextLists", item.TargetName);
             HashSet<string> lw = EngineeringWrite.WritableAttributes(list);
             foreach (KeyValuePair<string, string> a in tl.Attributes)
             {
@@ -214,8 +220,8 @@ namespace Prh.UnifiedKonverter.Transfer
 
         private void WriteAlarm(TransferItem item, SourceAlarm alarm, Dictionary<string, string> renamed)
         {
-            IEngineeringObject a = EngineeringWrite.Find(_target, "DiscreteAlarms", item.TargetName)
-                ?? EngineeringWrite.Create(_target, "DiscreteAlarms", item.TargetName);
+            IEngineeringObject a = EngineeringWrite.Find(Target(), "DiscreteAlarms", item.TargetName)
+                ?? EngineeringWrite.Create(Target(), "DiscreteAlarms", item.TargetName);
             HashSet<string> w = EngineeringWrite.WritableAttributes(a);
 
             Note(item, EngineeringWrite.TrySet(a, w, alarm.Id, "Id"));
