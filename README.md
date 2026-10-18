@@ -2,21 +2,24 @@
 
 **TIA-Portal-Add-In** für die Migration von WinCC Comfort/Advanced nach WinCC Unified.
 
-Ziel: per Rechtsklick im Projektbaum
+Ablauf einer Migration:
 
-1. **Bereinigen** – HMI-Variablen, Textlisten und HMI-Meldungen Unified-konform machen, direkt im Projekt statt über Excel-Export und -Import. Es gelten exakt die Regeln des [WinCC Unified List Converter](https://paul-rafael.github.io/wincc-unified-list-converter/). Vor jeder Änderung zeigt das Add-In eine Vorschau und wartet auf deine Bestätigung.
-2. **Prüfen** – ein Projekt vor der Migration mit Data2Unified durchsehen: Sonderzeichen und Kollisionen in Namen, Erfassungszyklus 200 ms, Erfassungsart „Zyklisch fortlaufend“, UInt in Melde-/Störwörtern, String- und Array-Variablen. Die Prüfung liest nur.
+1. **Für Unified vorbereiten** (dieses Add-In): Rechtsklick auf die alte HMI → prüfen, Vorschau, bereinigen nach Bestätigung. Es gelten exakt die Regeln des [WinCC Unified List Converter](https://paul-rafael.github.io/wincc-unified-list-converter/).
+2. **Migration mit Data2Unified** (nicht Teil dieses Projekts).
+3. **Zu Unified übertragen** (dieses Add-In, geplant): Rechtsklick auf die alte HMI → Ziel-Unified-HMI wählen → Variablen, Meldungen, Textlisten automatisch übertragen.
 
 ## Stand
 
 | Version | Inhalt |
 |---|---|
-| **0.1** | Machbarkeitstest: *Unified-Konverter → Variablen auflisten* an einer HMI-Variablentabelle. Liest alle Variablen samt Openness-Attributen und zeigt sie an, Bericht als CSV. Nur lesend. |
+| 0.1 | Machbarkeitstest: Variablen einer Tabelle auflisten (nur lesend) |
+| **0.2** | Schritt 1 für HMI-Variablen: alle Tabellen eines Geräts, Prüfung vor Data2Unified, Umbenennen nach Bestätigung, Bericht. [Vorschau des Fensters](docs/vorschau/schritt1.html) |
 
 Unterstützt: **TIA Portal V20 und V21**, je ein eigener Build.
 
 ## Dokumentation
 
+- [docs/PLAN.md](docs/PLAN.md) – Ablauf Schritt 1–3, Stand und nächste Schritte
 - [docs/MACHBARKEIT.md](docs/MACHBARKEIT.md) – was die Add-In-API für Comfort/Advanced und Unified lesen und ändern kann, mit Einschränkungen
 - [docs/BAUEN_UND_TESTEN.md](docs/BAUEN_UND_TESTEN.md) – bauen, installieren und testen, Schritt für Schritt
 
@@ -26,14 +29,15 @@ Unterstützt: **TIA Portal V20 und V21**, je ein eigener Build.
 powershell -ExecutionPolicy Bypass -File .\build.ps1 -TiaVersion 20
 ```
 
-Danach im TIA Portal in der Taskkarte **Add-Ins** „Unified-Konverter“ aktivieren.
+Danach im TIA Portal in der Taskkarte **Add-Ins** „Unified-Konverter“ aktivieren, Rechtsklick auf die alte HMI → **Unified-Konverter → Für Unified vorbereiten**.
 
 ## Aufbau
 
 ```
 src/UnifiedKonverter/
   AddInProvider.cs, KonverterAddIn.cs   Kontextmenü
-  Openness/                             generischer, rein lesender Zugriff auf HMI-Objekte
+  Openness/                             Lesen der HMI-Objekte, Umbenennen in einer Transaktion
+  Rules/                                Converter-Regeln und Prüfungen vor Data2Unified
   Report/                               CSV-Bericht
   Ui/                                   Fenster nach PRH Design Kit (Schwarz/Weiß, Dunkelrot)
   Publisher/                            Paket-Konfiguration je TIA-Version
