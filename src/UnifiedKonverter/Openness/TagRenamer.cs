@@ -26,7 +26,7 @@ namespace Prh.UnifiedKonverter.Openness
             return tags.Where(t => t.IsRenamed && !t.Findings.Any(f => f.Kind == FindingKind.Kollision)).ToList();
         }
 
-        public static List<RenameOutcome> Apply(TiaPortal tiaPortal, IList<HmiTagInfo> tags, IDictionary<HmiTagInfo, IEngineeringObject> sources)
+        public static List<RenameOutcome> Apply(TiaPortal tiaPortal, IList<HmiTagInfo> tags, IDictionary<HmiTagInfo, object> sources)
         {
             List<RenameOutcome> outcomes = new List<RenameOutcome>();
             if (tags.Count == 0) return outcomes;
@@ -34,7 +34,7 @@ namespace Prh.UnifiedKonverter.Openness
             using (ExclusiveAccess access = tiaPortal.ExclusiveAccess())
             {
                 access.Text = "Für Unified vorbereiten: " + tags.Count + " Variablen werden umbenannt …";
-                ITransactionSupport project = FindProject(sources[tags[0]]);
+                ITransactionSupport project = FindProject((IEngineeringObject)sources[tags[0]]);
                 Transaction transaction = project == null ? null : access.Transaction(project, "Für Unified vorbereiten (" + tags.Count + " Variablen umbenannt)");
                 try
                 {
@@ -44,7 +44,7 @@ namespace Prh.UnifiedKonverter.Openness
                         RenameOutcome o = new RenameOutcome { Tag = tag, OldName = tag.Name, NewName = tag.UnifiedName };
                         try
                         {
-                            sources[tag].SetAttribute("Name", tag.UnifiedName);
+                            ((IEngineeringObject)sources[tag]).SetAttribute("Name", tag.UnifiedName);
                             o.Success = true;
                             tag.Name = tag.UnifiedName;
                         }

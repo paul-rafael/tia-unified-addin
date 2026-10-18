@@ -19,6 +19,7 @@ Diese Datei trennt klar zwischen **belegt** (Siemens-Doku oder öffentlicher Sie
 | Objektmodell | Im Add-In steht das **volle Openness-Objektmodell** zur Verfügung (dieselben Typen wie bei externen Openness-Programmen) | belegt (Siemens-Beispiele lesen Bausteine, HMI-Variablen und Meldungen) |
 | Laufzeitumgebung | Add-Ins laufen in einem **eigenen Prozess** neben TIA; Fenster (WinForms/WPF) sind möglich | belegt |
 | Sperre während der Ausführung | `TiaPortal.ExclusiveAccess()` mit Fortschrittstext und Abbruch-Knopf | belegt |
+| Publisher-Regel ab V20 | Keine Felder, Eigenschaften oder statischen Member mit TIA-Objekttypen (`IEngineeringObject`, `ExclusiveAccess` …), weil Add-Ins zwischen Aufrufen nicht neu geladen werden. Gilt auch für vom Compiler erzeugte Felder (Lambdas, die solche Variablen einfangen, `yield`-Iteratoren). Ausnahme wie in Siemens' Beispielen: das `TiaPortal`-Feld. Im Code deshalb als `object` gespeichert bzw. lokal gehalten. | belegt (eigener Build V20, 18.10.2026) |
 
 ### V20 und V21 sind nicht binärkompatibel
 

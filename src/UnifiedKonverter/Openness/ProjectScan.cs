@@ -9,7 +9,8 @@ namespace Prh.UnifiedKonverter.Openness
     {
         public string Name;
         public string DeviceName;
-        internal IEngineeringObject Software;
+        /// <summary>HmiSoftware – als object, weil der Siemens-Publisher Felder mit TIA-Objekttypen verbietet.</summary>
+        internal object Software;
 
         public override string ToString()
         {
@@ -65,15 +66,18 @@ namespace Prh.UnifiedKonverter.Openness
             return devices;
         }
 
-        private static IEnumerable<IEngineeringObject> SoftwareIn(IEngineeringObject item, int depth)
+        // Kein yield: Iteratoren erzeugen Felder mit TIA-Objekttypen, die der Siemens-Publisher ablehnt.
+        private static List<IEngineeringObject> SoftwareIn(IEngineeringObject item, int depth)
         {
-            if (depth > 6) yield break;
+            List<IEngineeringObject> found = new List<IEngineeringObject>();
+            if (depth > 6) return found;
             IEngineeringObject software = HmiObjects.SoftwareOf(item);
-            if (software != null) yield return software;
+            if (software != null) found.Add(software);
             foreach (IEngineeringObject child in HmiObjects.Composition(item, "DeviceItems"))
             {
-                foreach (IEngineeringObject s in SoftwareIn(child, depth + 1)) yield return s;
+                found.AddRange(SoftwareIn(child, depth + 1));
             }
+            return found;
         }
     }
 }
