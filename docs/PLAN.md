@@ -25,20 +25,30 @@ Offen bzw. als Nächstes:
 - Erfassungszyklus/-art automatisch korrigieren (statt nur melden) – sobald `Attribute.csv` zeigt, wie die Werte bei Classic aussehen und ob sie schreibbar sind.
 - Textlisten (Regel *Textlisten · Aktuell* ist schon im Code: `ConverterRules.CleanTextListName`) und Meldungen in Schritt 1 aufnehmen.
 
-## Schritt 3 – Plan
+## Schritt 3 – Stand Version 0.3
 
-Ziel: alte HMI → ausgewählte Unified-HMI, ohne Excel-Umweg.
+Rechtsklick auf die **alte HMI** → *Unified-Konverter → Zu Unified übertragen …* Vorschau: [vorschau/schritt3.html](vorschau/schritt3.html)
 
-| Objekt | Lesen (alte HMI) | Schreiben (Unified) | Regel |
+Umgesetzt:
+- **Ziel-Unified-HMI auswählen** (alle Unified-HMIs im Projekt, auch in Gerätegruppen).
+- **Umfang** per Karte: HMI-Variablen, Textlisten, Bitmeldungen; Option „Vorhandene Objekte aktualisieren“ (sonst bleiben z. B. von Data2Unified angelegte Objekte unverändert).
+- **Vorschau** je Objekt: wird angelegt / vorhanden / gesperrt (Kollision). Erst nach Rückfrage wird geschrieben, alles in **einer Transaktion** (ein „Rückgängig“).
+- **Ergebnisliste** je Objekt (angelegt, aktualisiert, übersprungen, Fehler mit Grund), speicherbar als CSV.
+
+| Objekt | Quelle (alte HMI) | Ziel (Unified) | Regel |
 |---|---|---|---|
-| HMI-Variablen | ✔ (Schritt 1 liest schon alles) | Unified-Openness: Tabellen und Variablen anlegen (`TagTables.Create`, `Tags.Create`), Verbindung, PLC-Variable, Zyklus setzen | Converter *HMI-Variablen* |
-| Textlisten | ◐ prüfen (`Struktur.txt` zeigt, ob `TextLists` angeboten wird) | `TextLists.Create`, Einträge mit mehrsprachigem Text | Converter *Textlisten · Klassisch / Aktuell* |
-| Bitmeldungen | ? bei Classic evtl. nicht per Openness lesbar → sonst TIA-Excel-Export einlesen | `DiscreteAlarms.Create` mit Trigger-Variable/-Bit, Klasse, Text, Parametern | Converter *HMI-Meldungen* (FieldInfo → `<ref id …>`), *Meldetexte umbrechen* |
-| Analogmeldungen, Meldeklassen, Verbindungen | später | später | – |
+| HMI-Variablen | Openness (wie Schritt 1) | Tabelle gleichen Namens (wird angelegt), Variable mit Verbindung, PLC-Variable, Datentyp, Länge, Zyklus (≥ 250 ms, z. B. „200 ms“ → `T250ms`), Erfassungsart („zyklisch fortlaufend“ → `CyclicInOperation`) | Converter *HMI-Variablen*; Kollisionen werden nicht übertragen |
+| Textlisten | Openness, falls angeboten | Textliste, Einträge mit allen gleichnamigen Attributen und allen Sprachen | Converter *Textlisten · Aktuell* für den Namen |
+| Bitmeldungen | Openness, falls angeboten – sonst **TIA-Excel-Export** der Meldungen wählen | Bitmeldung mit ID, Klasse, Trigger-Variable (umbenannt wie die Variablen), Trigger-Bit, Meldetext, Parameter 1 | Converter *HMI-Meldungen* (FieldInfo/Parameter nach VBA-Regel) |
 
-Vorgehen:
-1. Auswahldialog „Ziel-Unified-HMI“ (listet alle Unified-Geräte im Projekt).
-2. Vorschau wie in Schritt 1: was wird angelegt, was existiert schon (überspringen oder überschreiben?), Konflikte.
-3. Übertragen in einer Transaktion, Ergebnisliste mit Fehlern.
+Bewusst anders als die Excel-Datei des Converters: Der Bereich „HMI_RT_2::Alarming“ wird nicht gesetzt (er gehörte zu einem bestimmten Gerät); die Unified-HMI vergibt ihn selbst.
 
-Dafür brauche ich aus dem Test von Schritt 1: `Struktur.txt` eines Comfort-Panels **und** eines Unified-Panels. Darin steht, welche Objekte Openness auf beiden Seiten anbietet.
+## Was nur der Test unter Windows klären kann
+
+Der Code ist auf dem Mac **gegen Platzhalter** der Siemens-Bibliotheken kompiliert (V20 und V21, ohne Fehler) und die Regeln sind gegen die Testfälle des Converters geprüft. Nicht geprüft werden konnte, ob die echte Openness-API die verwendeten **Namen** anbietet. Deshalb ist alles so gebaut, dass Abweichungen nicht abstürzen, sondern pro Objekt als Hinweis erscheinen:
+
+- Attribut- und Kompositionsnamen bei Unified (`TagTables`, `Tags`, `TextLists`, `DiscreteAlarms`, `RaisedStateTag`, `TriggerBitAddress`, `EventText` …) und bei Classic (`TextLists`, Meldungen).
+- Werteformate: Unified-Zyklusnamen (`T250ms`, `T1s` …), Erfassungsart (`CyclicInOperation`), Datentypen und Verbindungsnamen nach Data2Unified.
+- Meldetext-Parameter: Der Text wird mit `<field ref … />` übernommen; ob Unified daraus den Parameter erkennt, zeigt der Test.
+
+Jeder Hinweis in der Ergebnisliste nennt Attribut, Wert und Fehlermeldung von TIA, damit ich gezielt nachbessern kann.

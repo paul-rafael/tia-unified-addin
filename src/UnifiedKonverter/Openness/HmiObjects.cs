@@ -147,6 +147,37 @@ namespace Prh.UnifiedKonverter.Openness
             return null;
         }
 
+        /// <summary>Erstes HMI-Gerät (HmiTarget/HmiSoftware) in einer Auswahl aus Gerät, HMI, Ordner oder Tabelle.</summary>
+        public static IEngineeringObject FindHmiIn(IEnumerable<IEngineeringObject> selection)
+        {
+            foreach (IEngineeringObject obj in selection)
+            {
+                if (IsHmiSoftware(obj)) return obj;
+                HmiKind kind;
+                IEngineeringObject up = FindHmiSoftware(obj, out kind);
+                if (up != null) return up;
+                if (IsDevice(obj))
+                {
+                    IEngineeringObject found = FindHmiInDevice(obj, 0);
+                    if (found != null) return found;
+                }
+            }
+            return null;
+        }
+
+        private static IEngineeringObject FindHmiInDevice(IEngineeringObject item, int depth)
+        {
+            if (depth > 6) return null;
+            IEngineeringObject software = SoftwareOf(item);
+            if (software != null && IsHmiSoftware(software)) return software;
+            foreach (IEngineeringObject child in Composition(item, "DeviceItems"))
+            {
+                IEngineeringObject found = FindHmiInDevice(child, depth + 1);
+                if (found != null) return found;
+            }
+            return null;
+        }
+
         /// <summary>Ordnerpfad zwischen HMI-Gerät und Objekt, z. B. „HMI-Variablen › Antriebe“.</summary>
         public static string FolderPath(IEngineeringObject obj)
         {

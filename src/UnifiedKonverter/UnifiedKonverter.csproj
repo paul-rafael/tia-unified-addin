@@ -14,7 +14,7 @@
     <LangVersion>7.3</LangVersion>
     <AssemblyName>UnifiedKonverter</AssemblyName>
     <RootNamespace>Prh.UnifiedKonverter</RootNamespace>
-    <Version>0.2.0</Version>
+    <Version>0.3.0</Version>
     <Authors>Paul-Rafael Hasan-Man</Authors>
     <Product>Unified-Konverter</Product>
     <Copyright>Paul-Rafael Hasan-Man</Copyright>
@@ -84,6 +84,10 @@
   <ItemGroup>
     <None Include="Publisher\*.xml" />
     <EmbeddedResource Include="Ui\Resources\pr-signatur.png" LogicalName="pr-signatur.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="System.IO.Compression" />
   </ItemGroup>
 
   <!-- .NET-Framework-4.8-Referenzen aus NuGet: so baut auch das reine .NET SDK ohne Visual Studio / Developer Pack -->

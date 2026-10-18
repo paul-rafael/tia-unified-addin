@@ -1,6 +1,6 @@
 # Bauen, installieren, testen (Windows)
 
-Gilt für Version 0.2 (Schritt 1 „Für Unified vorbereiten“). Dauer: etwa 20 Minuten beim ersten Mal.
+Gilt für Version 0.3 (Schritt 1 „Für Unified vorbereiten“ und Schritt 3 „Zu Unified übertragen“). Dauer: etwa 20 Minuten beim ersten Mal.
 
 ## 01 · Voraussetzungen prüfen
 
@@ -58,6 +58,14 @@ Nach jedem neuen Build: TIA Portal neu starten oder das Add-In in der Taskkarte 
    - Nimmt **Bearbeiten → Rückgängig** alles in einem Schritt zurück?
 6. Gegenprobe: Rechtsklick auf eine SPS → „Für Unified vorbereiten“ meldet „Keine HMI-Variablen gefunden“.
 
+**Schritt 3 – Zu Unified übertragen** (Projekt mit alter HMI **und** Unified-HMI, z. B. nach Data2Unified):
+
+1. Rechtsklick auf die **alte HMI** → **Unified-Konverter → Zu Unified übertragen …**
+2. Oben die **Ziel-Unified-HMI** wählen. Die drei Karten zeigen, was neu ist und was schon existiert.
+3. Bei *Bitmeldungen* steht, ob die alte HMI sie über Openness liefert. Falls nicht: in TIA die Meldungen der alten HMI nach Excel exportieren und über **Export-Datei wählen …** laden.
+4. Liste prüfen (Filter *Neu / Vorhanden / Fehler und Hinweise*) → **Übertragen** → Rückfrage bestätigen.
+5. Danach die Ergebnisliste ansehen und mit **Liste speichern** sichern. In TIA kontrollieren: Variablen (Verbindung, PLC-Variable, Zyklus), Textlisten (Einträge, Texte), Meldungen (Klasse, Trigger, Text). **Rückgängig** muss alles in einem Schritt zurücknehmen.
+
 ## 06 · Was ich von dir zurück brauche
 
 Bitte schick mir (hier im Chat):
@@ -66,6 +74,7 @@ Bitte schick mir (hier im Chat):
 - [ ] Erscheint das Add-In in der Taskkarte, und ließ es sich aktivieren?
 - [ ] Je Gerätetyp (Comfort/Advanced, wenn möglich auch Unified) aus dem Berichtsordner: **`Attribute.csv`** und **`Struktur.txt`** (`Pruefung.csv` nur, wenn keine vertraulichen Namen drin sind)
 - [ ] Ergebnis von „Umbenennen übernehmen“: Meldung im Fenster, Verweise in Bildern, Rückgängig
+- [ ] Aus Schritt 3 die gespeicherte `Uebertragung.csv` (vor allem die Spalte *Hinweise*) und Screenshots der übertragenen Objekte in TIA
 - [ ] Einen **Screenshot** des Fensters, damit ich das Design mit der [Vorschau](vorschau/schritt1.html) vergleichen kann
 - [ ] Wie lange das Lesen einer großen Tabelle gedauert hat (grob)
 
