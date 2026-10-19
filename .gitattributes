@@ -3,3 +3,4 @@
 *.cs text eol=crlf
 *.csproj text eol=crlf
 *.xml text eol=crlf
+*.cmd text eol=crlf
