@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <!--
     Unified-Konverter – TIA-Portal-Add-In
@@ -33,16 +33,17 @@
   </PropertyGroup>
   <PropertyGroup>
     <TiaPortalDir Condition="'$(TiaPortalDir)' == ''">$(ProgramW6432)\Siemens\Automation\Portal V$(TiaVersion)\</TiaPortalDir>
-    <TiaPortalDir>$([MSBuild]::EnsureTrailingSlash('$(TiaPortalDir)'))</TiaPortalDir>
+    <!-- Eigene Eigenschaft: ein per -p:TiaPortalDir übergebener Wert lässt sich im Projekt nicht überschreiben -->
+    <_TiaDir>$([MSBuild]::EnsureTrailingSlash('$(TiaPortalDir)'))</_TiaDir>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TiaVersion)' == '20'">
-    <TiaApiDir>$(TiaPortalDir)PublicAPI\V20.AddIn\</TiaApiDir>
+    <TiaApiDir>$(_TiaDir)PublicAPI\V20.AddIn\</TiaApiDir>
     <TiaPublisherExe>$(TiaApiDir)Siemens.Engineering.AddIn.Publisher.exe</TiaPublisherExe>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TiaVersion)' == '21'">
-    <TiaApiDir>$(TiaPortalDir)PublicAPI\V21\net48\</TiaApiDir>
-    <TiaPublisherExe>$(TiaPortalDir)PublicAPI\V21\Siemens.Engineering.AddIn.Publisher.exe</TiaPublisherExe>
+    <TiaApiDir>$(_TiaDir)PublicAPI\V21\net48\</TiaApiDir>
+    <TiaPublisherExe>$(_TiaDir)PublicAPI\V21\Siemens.Engineering.AddIn.Publisher.exe</TiaPublisherExe>
   </PropertyGroup>
 
   <!-- V20: eine Bibliothek mit Add-In-API und Objektmodell -->
