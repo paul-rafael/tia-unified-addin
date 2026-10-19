@@ -433,7 +433,7 @@ namespace Prh.UnifiedKonverter.Ui
             try
             {
                 UseWaitCursor = true;
-                outcomes = _rename(candidates);
+                outcomes = UiThread.Invoke(() => _rename(candidates));
             }
             catch (Exception ex)
             {
