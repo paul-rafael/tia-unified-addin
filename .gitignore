@@ -6,3 +6,5 @@ obj/
 Publisher.log
 TestResults/
 .DS_Store
+Ausgabe/
+.tia-pfad-V*.txt

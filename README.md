@@ -27,9 +27,15 @@ Unterstützt: **TIA Portal V20 und V21**, je ein eigener Build.
 
 ## Kurzanleitung
 
+Doppelklick auf **`Bauen.cmd`** → TIA-Version wählen, TIA-Ordner prüfen oder über *Durchsuchen …* wählen → **Bauen**. Das fertige Paket liegt danach in `Ausgabe\`; von dort nach `%APPDATA%\Siemens\Automation\Portal V20\UserAddIns\` kopieren (oder im Fenster „direkt in TIA installieren“ anhaken).
+
+Ohne Fenster:
+
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\build.ps1 -TiaVersion 20
 ```
+
+Findet das Skript TIA nicht, fragt es nach dem Ordner und merkt ihn sich.
 
 Danach im TIA Portal in der Taskkarte **Add-Ins** „Unified-Konverter“ aktivieren, Rechtsklick auf die alte HMI → **Unified-Konverter → Für Unified vorbereiten** bzw. **Zu Unified übertragen**.
 
@@ -46,6 +52,8 @@ src/UnifiedKonverter/
   Ui/                                   Fenster nach PRH Design Kit (Schwarz/Weiß, Dunkelrot)
   Publisher/                            Paket-Konfiguration je TIA-Version
 build.ps1                               Bauen + Paketieren
+Bauen.cmd, tools/BauenFenster.ps1       Fenster zum Bauen (Doppelklick)
+tools/TiaPfad.ps1                       TIA-Ordner finden, prüfen, merken
 ```
 
 ---

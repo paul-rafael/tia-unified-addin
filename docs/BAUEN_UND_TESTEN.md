@@ -18,22 +18,29 @@ Ohne Git: auf [github.com/paul-rafael/tia-unified-addin](https://github.com/paul
 
 ## 03 · Bauen
 
-**Variante A – Skript (empfohlen).** Startmenü → „Developer PowerShell for VS 2022“:
+**Variante A – Fenster (am einfachsten).** Doppelklick auf **`Bauen.cmd`** im Projektordner:
+
+1. TIA-Version wählen (V20 / V21).
+2. Der TIA-Ordner wird automatisch gesucht. Steht dort nichts oder ein Fehler: über **Durchsuchen …** den TIA-Installationsordner wählen (z. B. `E:\Program Files\Siemens\Automation\Portal V20`). Ein übergeordneter Ordner reicht auch, gesucht wird bis zwei Ebenen tiefer. Der Ordner wird gemerkt.
+3. **Bauen**. Am Ende öffnet sich der Ordner `Ausgabe` mit `Unified-Konverter_V20.addin`.
+4. Die Datei nach `%APPDATA%\Siemens\Automation\Portal V20\UserAddIns\` kopieren, oder vor dem Bauen „direkt in TIA installieren“ anhaken.
+
+**Variante A2 – Skript.** PowerShell im Projektordner:
 
 ```powershell
-cd C:\Projekte\tia-unified-addin
 powershell -ExecutionPolicy Bypass -File .\build.ps1 -TiaVersion 20
 ```
 
-Für V21 entsprechend `-TiaVersion 21`. Weitere Schalter:
+Für V21 entsprechend `-TiaVersion 21`. Findet das Skript TIA nicht, fragt es nach dem Ordner (eintippen oder leer lassen für die Ordnerauswahl) und merkt ihn sich. Weitere Schalter:
 - `-NoInstall`: Paket nur bauen, nicht nach `UserAddIns` kopieren
-- `-TiaPortalDir "D:\…\Portal V20\"`: wenn TIA nicht unter `C:\Program Files\Siemens\Automation\` liegt (normalerweise wird der Pfad aus der Registry gelesen)
+- `-TiaPortalDir "E:\…\Portal V20"`: TIA-Ordner direkt angeben
 
 **Variante B – Visual Studio.** `src\UnifiedKonverter\UnifiedKonverter.csproj` öffnen, Konfiguration **Release**, „Erstellen“. Ohne weitere Angabe baut Visual Studio für **V20**. Für V21 in der `.csproj` die Zeile `<TiaVersion …>20</TiaVersion>` auf `21` ändern.
 
 **Ergebnis:**
+- `Ausgabe\Unified-Konverter_V20.addin` (zum manuellen Kopieren)
 - `src\UnifiedKonverter\bin\V20\Release\Unified-Konverter_V20.addin`
-- automatisch kopiert nach `%APPDATA%\Siemens\Automation\Portal V20\UserAddIns\`
+- ohne `-NoInstall` bzw. mit Häkchen im Fenster automatisch kopiert nach `%APPDATA%\Siemens\Automation\Portal V20\UserAddIns\`
 - Protokoll des Paketierens: `…\bin\V20\Release\Publisher.log`
 
 ## 04 · Im TIA Portal aktivieren
@@ -82,7 +89,8 @@ Bitte schick mir (hier im Chat):
 
 | Meldung | Ursache / Abhilfe |
 |---|---|
-| `TIA-Portal-API nicht gefunden: …` | TIA liegt woanders → `-TiaPortalDir` angeben |
+| `TIA-Portal-API nicht gefunden: …` oder `keine TIA-Portal-V20-API` | TIA liegt woanders → im Fenster *Durchsuchen …* bzw. `-TiaPortalDir` angeben. Fehlt im TIA-Ordner `PublicAPI`, ist TIA Portal Openness nicht installiert (TIA-Setup → Ändern → Openness) |
+| `NU1301` / `NU1101` (Rechner ohne Internet) | Die NuGet-Pakete `Microsoft.NETFramework.ReferenceAssemblies` und `…ReferenceAssemblies.net48` (1.0.3) auf einem Rechner mit Internet laden, in einen Ordner legen, dann `dotnet nuget add source C:\nuget-offline -n offline` und `dotnet nuget disable source nuget.org` |
 | `CS0246: Typ oder Namespace … nicht gefunden` (nur V21) | Namensräume in V21 anders als erwartet → Fehlerausgabe schicken. Zusätzlich hilft eine Liste der DLLs: `dir "C:\Program Files\Siemens\Automation\Portal V21\PublicAPI\V21\net48"` |
 | `CS0012: … in einer nicht referenzierten Assembly definiert` | eine weitere Siemens-DLL fehlt in der `.csproj` → Meldung schicken, ich ergänze sie |
 | Add-In fehlt in der Taskkarte | liegt die `.addin`-Datei in `%APPDATA%\Siemens\Automation\Portal V20\UserAddIns`? TIA neu starten |
