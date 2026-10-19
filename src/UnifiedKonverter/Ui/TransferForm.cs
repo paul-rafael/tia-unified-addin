@@ -235,7 +235,8 @@ namespace Prh.UnifiedKonverter.Ui
                 try
                 {
                     UseWaitCursor = true;
-                    all = new UnifiedTransfer(_source, target).Plan(new TransferOptions { UpdateExisting = _update.Checked });
+                    TransferOptions planOptions = new TransferOptions { UpdateExisting = _update.Checked };
+                    all = UiThread.Invoke(() => new UnifiedTransfer(_source, target).Plan(planOptions));
                 }
                 catch (Exception ex)
                 {
@@ -358,7 +359,7 @@ namespace Prh.UnifiedKonverter.Ui
             try
             {
                 UseWaitCursor = true;
-                _runWriting("Zu Unified übertragen (" + (neu + update) + " Objekte)", cancelled => new UnifiedTransfer(_source, target).Execute(items, options, cancelled));
+                UiThread.Invoke(() => _runWriting("Zu Unified übertragen (" + (neu + update) + " Objekte)", cancelled => new UnifiedTransfer(_source, target).Execute(items, options, cancelled)));
             }
             catch (Exception ex)
             {
