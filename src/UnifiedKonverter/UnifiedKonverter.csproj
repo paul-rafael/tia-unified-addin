@@ -14,7 +14,7 @@
     <LangVersion>7.3</LangVersion>
     <AssemblyName>UnifiedKonverter</AssemblyName>
     <RootNamespace>Prh.UnifiedKonverter</RootNamespace>
-    <Version>0.4.1</Version>
+    <Version>0.4.2</Version>
     <Authors>Paul-Rafael Hasan-Man</Authors>
     <Product>Unified-Konverter</Product>
     <Copyright>Paul-Rafael Hasan-Man</Copyright>
