@@ -174,8 +174,13 @@ namespace Prh.UnifiedKonverter.Transfer
         {
             IEngineeringObject table = EngineeringWrite.Find(Target(), "TagTables", tag.Table.Name)
                 ?? EngineeringWrite.Create(Target(), "TagTables", tag.Table.Name);
-            IEngineeringObject t = EngineeringWrite.Find(Target(), "Tags", item.TargetName)
-                ?? EngineeringWrite.Create(table, "Tags", item.TargetName);
+            IEngineeringObject t = EngineeringWrite.Find(Target(), "Tags", item.TargetName);
+            // Unified: HmiSoftware.Tags.Create(Name, Tabelle) bevorzugt. Das Anlegen über die Tabelle hat TIA V20
+            // in einer neu angelegten Tabelle zum Absturz gebracht (Protokoll 0.4.0).
+            if (t == null && !EngineeringWrite.TryCreate(Target(), "Tags", out t, item.TargetName, tag.Table.Name))
+            {
+                t = EngineeringWrite.Create(table, "Tags", item.TargetName);
+            }
             HashSet<string> w = EngineeringWrite.WritableAttributes(t);
 
             Note(item, EngineeringWrite.TrySet(t, w, tag.Connection, "Connection"));

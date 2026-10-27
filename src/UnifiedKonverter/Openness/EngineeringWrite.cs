@@ -38,19 +38,33 @@ namespace Prh.UnifiedKonverter.Openness
         /// <summary>composition.Create(name). Wirft mit verständlicher Meldung, wenn es kein Create(string) gibt.</summary>
         public static IEngineeringObject Create(IEngineeringObject parent, string composition, string name)
         {
+            IEngineeringObject created;
+            if (TryCreate(parent, composition, out created, name)) return created;
+            throw new InvalidOperationException("„" + composition + "“ bietet kein Create(Name).");
+        }
+
+        /// <summary>
+        /// composition.Create(args…) mit so vielen Text-Parametern wie <paramref name="args"/> – false, wenn es die
+        /// Komposition oder diese Überladung nicht gibt. Fehler beim Anlegen selbst werden weitergereicht.
+        /// </summary>
+        public static bool TryCreate(IEngineeringObject parent, string composition, out IEngineeringObject created, params string[] args)
+        {
+            created = null;
             object comp = CompositionObject(parent, composition);
-            if (comp == null) throw new InvalidOperationException("Komposition „" + composition + "“ gibt es am Ziel nicht.");
-            MethodInfo create = comp.GetType().GetMethod("Create", new[] { typeof(string) });
-            if (create == null) throw new InvalidOperationException("„" + composition + "“ bietet kein Create(Name).");
-            Protocol.Line("   anlegen in " + composition + ": " + name);
+            if (comp == null) return false;
+            MethodInfo create = comp.GetType().GetMethod("Create", args.Select(a => typeof(string)).ToArray());
+            if (create == null) return false;
+            Protocol.Line("   anlegen: " + comp.GetType().Name + ".Create(" + string.Join(", ", args) + ")");
             try
             {
-                return (IEngineeringObject)create.Invoke(comp, new object[] { name });
+                created = (IEngineeringObject)create.Invoke(comp, args.Cast<object>().ToArray());
             }
             catch (TargetInvocationException ex)
             {
                 throw ex.InnerException ?? ex;
             }
+            Protocol.Line("   angelegt");
+            return true;
         }
 
         /// <summary>Erster Kompositionsname aus der Liste, den das Objekt anbietet.</summary>
@@ -64,6 +78,7 @@ namespace Prh.UnifiedKonverter.Openness
 
         public static HashSet<string> WritableAttributes(IEngineeringObject obj)
         {
+            Protocol.Line("   Attribute abfragen");
             HashSet<string> names = new HashSet<string>(StringComparer.Ordinal);
             try
             {
@@ -72,7 +87,8 @@ namespace Prh.UnifiedKonverter.Openness
                     if (info.AccessMode.ToString().IndexOf("Write", StringComparison.OrdinalIgnoreCase) >= 0) names.Add(info.Name);
                 }
             }
-            catch (Exception) { }
+            catch (Exception ex) { Protocol.Line("   Attribute nicht lesbar: " + Unwrap(ex).Message); }
+            Protocol.Line("   schreibbar: " + string.Join(", ", names));
             return names;
         }
 
