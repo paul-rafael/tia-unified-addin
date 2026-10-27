@@ -48,7 +48,7 @@ Legende: ✔ belegt · ◐ wahrscheinlich, Test bestätigt es · ✖ nicht mögl
 | Name, Datentyp, Verbindung, PLC-Variable lesen | ◐ über Attribute; **welche Attribute es gibt, zeigt der Test** | ✔ `Name`, `DataType`, `Connection`, `PlcTag` |
 | Erfassungszyklus, Erfassungsart lesen | ◐ Attributnamen voraussichtlich `AcquisitionCycle` / `AcquisitionMode`, Test bestätigt | ✔ `AcquisitionCycle`, `AcquisitionMode` |
 | Lesen über XML-Export (Ausweichweg) | ✔ `TagTable.Export(...)` schreibt eine XML-Datei, **ändert das Projekt nicht** | ✔ ebenfalls möglich, aber nicht nötig |
-| **Umbenennen** | ? **Kernfrage des Tests:** ist `Name` als `ReadWrite` gemeldet? | ◐ `Name` schreibbar; ob Verweise (Bilder, Skripte, Meldungen) mitgezogen werden, muss ein Test zeigen |
+| **Umbenennen** | ✘ **getestet (V20, 0.3.1):** `Name` ist nur lesbar – TIA meldet `'set_Name' is not supported by type 'Siemens.Engineering.Hmi.Tag.Tag'` | ◐ `Name` schreibbar; ob Verweise (Bilder, Skripte, Meldungen) mitgezogen werden, muss ein Test zeigen |
 | Erfassungszyklus/-art ändern | ? Zugriffsart laut Test | ◐ schreibbar |
 | Datentyp ändern | ? meist an die PLC-Variable gebunden; Ursache liegt dann in der PLC | ◐ schreibbar, sofern nicht von der PLC-Variable vorgegeben |
 
