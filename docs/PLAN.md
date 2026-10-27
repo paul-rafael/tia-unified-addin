@@ -20,7 +20,7 @@ Umgesetzt:
 - **Bericht speichern**: `Pruefung.csv`, `Attribute.csv`, `Struktur.txt`.
 
 Offen bzw. als Nächstes:
-- **Ob Comfort/Advanced das Umbenennen per Openness zulässt**, zeigt der erste Test („Umbenennen übernehmen“ an einer Projektkopie). Falls nicht, steht pro Variable der Fehler im Fenster. Dann brauchen wir einen anderen Weg (siehe [MACHBARKEIT.md](MACHBARKEIT.md)).
+- **Ergebnis Test V20 (0.3.1): Comfort/Advanced lässt das Umbenennen per Openness nicht zu** (`set_Name` nicht unterstützt). Weg dafür offen, siehe [MACHBARKEIT.md](MACHBARKEIT.md). Ursprüngliche Frage: Ob Comfort/Advanced das Umbenennen per Openness zulässt, zeigt der erste Test („Umbenennen übernehmen“ an einer Projektkopie). Falls nicht, steht pro Variable der Fehler im Fenster. Dann brauchen wir einen anderen Weg (siehe [MACHBARKEIT.md](MACHBARKEIT.md)).
 - Ob TIA beim Umbenennen die Verweise in Bildern, Skripten und Meldungen mitzieht – im Test an einem Bild mit einer umbenannten Variable prüfen.
 - Erfassungszyklus/-art automatisch korrigieren (statt nur melden) – sobald `Attribute.csv` zeigt, wie die Werte bei Classic aussehen und ob sie schreibbar sind.
 - Textlisten (Regel *Textlisten · Aktuell* ist schon im Code: `ConverterRules.CleanTextListName`) und Meldungen in Schritt 1 aufnehmen.
