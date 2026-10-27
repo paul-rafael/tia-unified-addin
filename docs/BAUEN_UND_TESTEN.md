@@ -47,22 +47,21 @@ Für V21 entsprechend `-TiaVersion 21`. Findet das Skript TIA nicht, fragt es na
 
 1. Eine **Kopie** eines Projekts öffnen. Das Add-In ändert nichts (nur Leserecht), sicher ist sicher.
 2. Rechts die Taskkarte **Add-Ins** öffnen. Dort steht „Unified-Konverter“.
-3. Add-In auswählen → **Aktivieren**. TIA zeigt die angeforderten Rechte: *TIA lesen und schreiben* (fürs Umbenennen; ohne deine Bestätigung im Fenster wird nichts geändert) und *uneingeschränkter Zugriff* (nur zum Speichern des Berichts unter „Dokumente“). Bestätigen.
+3. Add-In auswählen → **Aktivieren**. TIA zeigt die angeforderten Rechte: *TIA lesen und schreiben* (für Schritt 3; ohne deine Bestätigung im Fenster wird nichts geändert) und *uneingeschränkter Zugriff* (nur zum Speichern des Berichts unter „Dokumente“). Bestätigen.
 
 Nach jedem neuen Build: TIA Portal neu starten oder das Add-In in der Taskkarte deaktivieren und wieder aktivieren.
 
 ## 05 · Testen
 
-**Mit einer Projektkopie arbeiten** – ab Version 0.2 kann das Add-In nach Bestätigung umbenennen.
+**Mit einer Projektkopie arbeiten** – Schritt 3 schreibt nach Bestätigung in die Unified-HMI.
 
 1. Im Projektbaum mit der rechten Maustaste auf das **alte HMI-Gerät** (Comfort/Advanced) klicken (Mac-Touchpad: Gerät anklicken, dann **Shift + F10**).
 2. **Unified-Konverter → Für Unified vorbereiten …**
 3. Links die Variablentabellen anklicken, oben die Filter *Mit Hinweisen* und *Umbenennen* ausprobieren.
 4. **Bericht speichern** → der Ordner öffnet sich.
-5. **Umbenennen übernehmen** → Rückfrage lesen → *Jetzt umbenennen*. Danach:
-   - Sind die Variablen im TIA-Variableneditor umbenannt?
-   - Ist ein Bild, das eine umbenannte Variable verwendet, noch richtig verknüpft?
-   - Nimmt **Bearbeiten → Rückgängig** alles in einem Schritt zurück?
+5. **Als Excel exportieren** → Speicherort wählen (Vorschlag: Dokumente\Unified-Konverter\Export\HMITagList_MIGUNI.xlsx). Danach:
+   - Öffnet Excel die Datei ohne Meldung? Stehen die neuen Namen in Spalte A?
+   - Lässt sich die Datei in TIA importieren (Variablentabelle → Importieren)? Falls nicht: die Fehlermeldung schicken.
 6. Gegenprobe: Rechtsklick auf eine SPS → „Für Unified vorbereiten“ meldet „Keine HMI-Variablen gefunden“.
 
 **Schritt 3 – Zu Unified übertragen** (Projekt mit alter HMI **und** Unified-HMI, z. B. nach Data2Unified):
@@ -80,7 +79,8 @@ Bitte schick mir (hier im Chat):
 - [ ] Hat der Build geklappt? Falls nicht: die **komplette** Fehlerausgabe und `Publisher.log`
 - [ ] Erscheint das Add-In in der Taskkarte, und ließ es sich aktivieren?
 - [ ] Je Gerätetyp (Comfort/Advanced, wenn möglich auch Unified) aus dem Berichtsordner: **`Attribute.csv`** und **`Struktur.txt`** (`Pruefung.csv` nur, wenn keine vertraulichen Namen drin sind)
-- [ ] Ergebnis von „Umbenennen übernehmen“: Meldung im Fenster, Verweise in Bildern, Rückgängig
+- [ ] Ergebnis von „Als Excel exportieren“: öffnet Excel die Datei, klappt der Import in TIA?
+- [ ] Falls TIA bei Schritt 3 abstürzt: die neueste Datei aus Dokumente\Unified-Konverter\Protokolle
 - [ ] Aus Schritt 3 die gespeicherte `Uebertragung.csv` (vor allem die Spalte *Hinweise*) und Screenshots der übertragenen Objekte in TIA
 - [ ] Einen **Screenshot** des Fensters, damit ich das Design mit der [Vorschau](vorschau/schritt1.html) vergleichen kann
 - [ ] Wie lange das Lesen einer großen Tabelle gedauert hat (grob)

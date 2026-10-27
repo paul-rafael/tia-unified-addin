@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Prh.UnifiedKonverter.Openness;
+using Prh.UnifiedKonverter.Report;
 using Prh.UnifiedKonverter.Rules;
 using Siemens.Engineering;
 
@@ -74,6 +75,7 @@ namespace Prh.UnifiedKonverter.Transfer
 
         public List<TransferItem> Plan(TransferOptions options)
         {
+            Protocol.Line("Vorschau für Ziel lesen");
             List<TransferItem> items = new List<TransferItem>();
             if (options.Tags && _source.Tags != null)
             {
@@ -119,6 +121,7 @@ namespace Prh.UnifiedKonverter.Transfer
                     });
                 }
             }
+            Protocol.Line("Vorschau: " + items.Count + " Objekte");
             return items;
         }
 
@@ -147,6 +150,7 @@ namespace Prh.UnifiedKonverter.Transfer
                     continue;
                 }
                 bool existed = item.State == TransferState.Vorhanden;
+                Protocol.Line(item.Kind + " " + item.SourceName + " → " + item.TargetName + (existed ? " (aktualisieren)" : ""));
                 try
                 {
                     switch (item.Kind)
@@ -161,6 +165,7 @@ namespace Prh.UnifiedKonverter.Transfer
                 {
                     item.State = TransferState.Fehler;
                     item.Notes.Insert(0, EngineeringWrite.Unwrap(ex).Message);
+                    Protocol.Line("   Fehler: " + EngineeringWrite.Unwrap(ex).Message);
                 }
             }
         }

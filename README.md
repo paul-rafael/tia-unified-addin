@@ -14,7 +14,8 @@ Ablauf einer Migration:
 |---|---|
 | 0.1 | Machbarkeitstest: Variablen einer Tabelle auflisten (nur lesend) |
 | 0.2 | Schritt 1 für HMI-Variablen: alle Tabellen eines Geräts, Prüfung vor Data2Unified, Umbenennen nach Bestätigung, Bericht. [Vorschau](docs/vorschau/schritt1.html) |
-| **0.3** | Schritt 3: Ziel-Unified-HMI wählen, Variablen, Textlisten und Bitmeldungen übertragen (Meldungen auch aus dem TIA-Excel-Export), Vorschau, Ergebnisliste. [Vorschau](docs/vorschau/schritt3.html) |
+| 0.3 | Schritt 3: Ziel-Unified-HMI wählen, Variablen, Textlisten und Bitmeldungen übertragen (Meldungen auch aus dem TIA-Excel-Export), Vorschau, Ergebnisliste. [Vorschau](docs/vorschau/schritt3.html) |
+| **0.4** | Schritt 1 exportiert die bereinigten Namen als Excel-Liste (`HMITagList_MIGUNI.xlsx`, Blatt „Hmi Tags“), weil sich Comfort/Advanced-Variablen per Openness nicht umbenennen lassen. Schritt 3 schreibt ein Laufprotokoll (Dokumente\Unified-Konverter\Protokolle). |
 
 Unterstützt: **TIA Portal V20 und V21**, je ein eigener Build.
 
@@ -44,11 +45,11 @@ Danach im TIA Portal in der Taskkarte **Add-Ins** „Unified-Konverter“ aktivi
 ```
 src/UnifiedKonverter/
   AddInProvider.cs, KonverterAddIn.cs   Kontextmenü
-  Openness/                             Lesen der HMI-Objekte, Umbenennen in einer Transaktion
+  Openness/                             Lesen der HMI-Objekte, Schreiben in die Unified-HMI
   Rules/                                Converter-Regeln (Variablen, Textlisten, Meldungen) und Prüfungen
   Transfer/                             Schritt 3: Quelle lesen, Plan, Übertragen in die Unified-HMI
   Excel/                                Lesen des TIA-Excel-Exports der Meldungen
-  Report/                               CSV-Bericht
+  Report/                               CSV-Bericht, Excel-Variablenliste, Laufprotokoll
   Ui/                                   Fenster nach PRH Design Kit (Schwarz/Weiß, Dunkelrot)
   Publisher/                            Paket-Konfiguration je TIA-Version
 build.ps1                               Bauen + Paketieren

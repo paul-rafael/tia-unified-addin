@@ -16,7 +16,7 @@ Umgesetzt:
 - Einstieg über das **HMI-Gerät**, den Ordner „HMI-Variablen“ oder einzelne Tabellen. Das Add-In sammelt alle Variablentabellen des Geräts, auch in Unterordnern.
 - Fenster: links die **Variablentabellen zum Anklicken**, rechts Kennzahlen, Filter (*Alle / Mit Hinweisen / Umbenennen*), Suche und die Variablenliste mit *Name in Unified* und Hinweisen. Vorschau: [vorschau/schritt1.html](vorschau/schritt1.html)
 - Prüfungen: Sonderzeichen (Converter-Regel), **Kollisionen nach der Bereinigung** (z. B. `A.B` und `A_B`), Erfassungszyklus unter 250 ms, Erfassungsart „Zyklisch fortlaufend“, UInt, String- und Array-Variablen.
-- **Umbenennen übernehmen**: nur nach Rückfrage, in **einer Transaktion** (in TIA mit einem „Rückgängig“ zurücknehmbar). Variablen mit Kollision werden ausgelassen. Schlägt eine Variable fehl, steht der Grund in einer Liste.
+- **Als Excel exportieren** (ab 0.4, ersetzt „Umbenennen übernehmen“): alle Variablen mit den bereinigten Namen als `HMITagList_MIGUNI.xlsx` (Blatt „Hmi Tags“, Spalten Name, Path, Connection, PLC tag, DataType, Length). Variablen mit Kollision behalten ihren Namen. Die alte HMI bleibt unverändert.
 - **Bericht speichern**: `Pruefung.csv`, `Attribute.csv`, `Struktur.txt`.
 
 Offen bzw. als Nächstes:

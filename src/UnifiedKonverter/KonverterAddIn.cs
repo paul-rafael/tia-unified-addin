@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Prh.UnifiedKonverter.Openness;
+using Prh.UnifiedKonverter.Report;
 using Prh.UnifiedKonverter.Rules;
 using Prh.UnifiedKonverter.Transfer;
 using Prh.UnifiedKonverter.Ui;
@@ -17,7 +18,7 @@ namespace Prh.UnifiedKonverter
 {
     /// <summary>
     /// Kontextmenü „Unified-Konverter“ an der alten HMI (Gerät), am Ordner „HMI-Variablen“ oder an Variablentabellen.
-    /// Schritt 1 „Für Unified vorbereiten“: prüfen, Vorschau, Umbenennen erst nach Bestätigung.
+    /// Schritt 1 „Für Unified vorbereiten“: prüfen, Vorschau, Export der bereinigten Namen als Excel-Liste.
     /// Schritt 3 „Zu Unified übertragen“: Variablen, Textlisten, Bitmeldungen in eine gewählte Unified-HMI.
     /// </summary>
     public sealed class KonverterAddIn : ContextMenuAddIn
@@ -77,7 +78,7 @@ namespace Prh.UnifiedKonverter
 
             UiThread.Run(() =>
             {
-                using (PrepareForm form = new PrepareForm(result, tags => TagRenamer.Apply(_tiaPortal, tags, reader.Sources)))
+                using (PrepareForm form = new PrepareForm(result))
                 {
                     form.ShowDialog();
                 }
@@ -100,22 +101,31 @@ namespace Prh.UnifiedKonverter
                 return;
             }
 
+            Protocol.Start("Uebertragung");
+            Protocol.Line("Quelle: " + HmiObjects.NameOf(hmi));
             try
             {
                 using (ExclusiveAccess access = _tiaPortal.ExclusiveAccess())
                 {
                     access.Text = "Unified-Konverter: alte HMI wird gelesen …";
+                    Protocol.Line("Lesen: Variablen");
                     source.Tags = new TagTableReader().Read(new[] { hmi }, CancelCheck(access));
                     ProjectChecks.Run(source.Tags);
+                    Protocol.Line("Lesen: Textlisten");
                     SourceReader.ReadTextLists(hmi, source);
+                    Protocol.Line("Lesen: Meldungen");
                     SourceReader.ReadAlarmsFromOpenness(hmi, source);
+                    Protocol.Line("Lesen: Unified-Ziele im Projekt");
                     project = ProjectScan.FindProject(hmi);
                     targets = ProjectScan.FindUnifiedTargets(project)
                         .GroupBy(t => t.ToString()).Select(g => g.First()).ToList();
                 }
+                Protocol.Line("Gelesen: " + source.Tags.AllTags.Count() + " Variablen, " + source.TextLists.Count + " Textlisten, "
+                    + source.Alarms.Count + " Meldungen, " + targets.Count + " Unified-Ziele");
             }
             catch (Exception ex)
             {
+                Protocol.Line("FEHLER beim Lesen: " + ex);
                 UiThread.Run(() => MessageForm.ShowError("Lesen fehlgeschlagen", ex.ToString()));
                 return;
             }
@@ -129,6 +139,8 @@ namespace Prh.UnifiedKonverter
                     form.ShowDialog();
                 }
             });
+            Protocol.Line("Fenster geschlossen");
+            Protocol.Close();
         }
 
         /// <summary>Schreibt unter ExclusiveAccess und in einer Transaktion – in TIA mit einem „Rückgängig“ zurücknehmbar.</summary>
@@ -140,14 +152,18 @@ namespace Prh.UnifiedKonverter
                 ITransactionSupport transactionSupport = project as ITransactionSupport;
                 if (transactionSupport == null)
                 {
+                    Protocol.Line("Schreiben ohne Transaktion: " + description);
                     body(CancelCheck(access));
                     return;
                 }
+                Protocol.Line("Transaktion starten: " + description);
                 using (Transaction transaction = access.Transaction(transactionSupport, description))
                 {
                     body(CancelCheck(access));
                     transaction.CommitOnDispose();
+                    Protocol.Line("Transaktion abschließen");
                 }
+                Protocol.Line("Transaktion abgeschlossen");
             }
         }
 

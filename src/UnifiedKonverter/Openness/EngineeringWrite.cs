@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using Prh.UnifiedKonverter.Report;
 using Siemens.Engineering;
 
 namespace Prh.UnifiedKonverter.Openness
@@ -41,6 +42,7 @@ namespace Prh.UnifiedKonverter.Openness
             if (comp == null) throw new InvalidOperationException("Komposition „" + composition + "“ gibt es am Ziel nicht.");
             MethodInfo create = comp.GetType().GetMethod("Create", new[] { typeof(string) });
             if (create == null) throw new InvalidOperationException("„" + composition + "“ bietet kein Create(Name).");
+            Protocol.Line("   anlegen in " + composition + ": " + name);
             try
             {
                 return (IEngineeringObject)create.Invoke(comp, new object[] { name });
@@ -83,6 +85,7 @@ namespace Prh.UnifiedKonverter.Openness
             if (string.IsNullOrEmpty(value)) return null;
             string name = candidates.FirstOrDefault(writable.Contains);
             if (name == null) return candidates[0] + ": am Ziel nicht schreibbar";
+            Protocol.Line("   " + name + " = " + value);
             try
             {
                 obj.SetAttribute(name, Convert(obj, name, value));

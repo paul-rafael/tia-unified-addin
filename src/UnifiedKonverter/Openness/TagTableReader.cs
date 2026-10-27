@@ -24,9 +24,6 @@ namespace Prh.UnifiedKonverter.Openness
         private readonly Dictionary<object, HmiDeviceInfo> _devices = new Dictionary<object, HmiDeviceInfo>();
         private readonly ReadResult _result = new ReadResult();
 
-        /// <summary>Für das spätere Umbenennen: Openness-Objekt je gelesener Variable (als object – Publisher-Regel ab V20).</summary>
-        public readonly Dictionary<HmiTagInfo, object> Sources = new Dictionary<HmiTagInfo, object>();
-
         public ReadResult Read(IEnumerable<IEngineeringObject> selection, Func<bool> cancelled)
         {
             Stopwatch watch = Stopwatch.StartNew();
@@ -101,9 +98,7 @@ namespace Prh.UnifiedKonverter.Openness
             {
                 try
                 {
-                    HmiTagInfo t = ReadTag(tag, info);
-                    info.Tags.Add(t);
-                    Sources[t] = tag;
+                    info.Tags.Add(ReadTag(tag, info));
                 }
                 catch (Exception ex)
                 {
