@@ -1,7 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
@@ -13,12 +14,12 @@ namespace Prh.UnifiedKonverter.Ui
 {
     /// <summary>
     /// Schritt 1 „Für Unified vorbereiten“: links die Variablentabellen des HMI-Geräts, rechts Kennzahlen,
-    /// Filter und Variablenliste mit Befunden. Umbenennen erst nach Bestätigung.
+    /// Filter und Variablenliste mit Befunden. Export der bereinigten Namen als Excel-Liste
+    /// (Comfort/Advanced-Variablen lassen sich per Openness nicht umbenennen).
     /// </summary>
     internal sealed class PrepareForm : Form
     {
         private readonly ReadResult _result;
-        private readonly Func<IList<HmiTagInfo>, List<RenameOutcome>> _rename;
         private readonly Theme _t = Theme.Current();
 
         private readonly ListBox _tables = new ListBox();
@@ -38,10 +39,9 @@ namespace Prh.UnifiedKonverter.Ui
             public HmiTableInfo Table; // null = alle Tabellen
         }
 
-        public PrepareForm(ReadResult result, Func<IList<HmiTagInfo>, List<RenameOutcome>> rename)
+        public PrepareForm(ReadResult result)
         {
             _result = result;
-            _rename = rename;
 
             Text = "Unified-Konverter · Für Unified vorbereiten";
             StartPosition = FormStartPosition.CenterScreen;
@@ -63,8 +63,8 @@ namespace Prh.UnifiedKonverter.Ui
             _filter.SelectedChanged += (s, e) => FillGrid();
             _search = new SearchBox(_t, "Variable suchen …") { Anchor = AnchorStyles.Right | AnchorStyles.Top };
             _search.SearchChanged += (s, e) => FillGrid();
-            _apply = new PrButton(_t, PrButton.Style.Primary, "Umbenennen übernehmen");
-            _apply.Click += (s, e) => ApplyRenames();
+            _apply = new PrButton(_t, PrButton.Style.Primary, "Als Excel exportieren");
+            _apply.Click += (s, e) => ExportExcel();
 
             Control content = BuildContent();
             Control sidebar = BuildSidebar();
@@ -281,7 +281,7 @@ namespace Prh.UnifiedKonverter.Ui
                     + (item.Table.Problems.Count > 0 ? " · " + item.Table.Problems.Count + " nicht lesbar" : "");
             }
 
-            int rename = TagRenamer.Candidates(tags).Count;
+            int rename = TagListExport.Renamed(tags).Count;
             int collisions = tags.Count(t => t.Findings.Any(f => f.Kind == FindingKind.Kollision));
             int other = tags.Count(t => t.Findings.Any(f => f.Kind != FindingKind.Kollision && f.Kind != FindingKind.Sonderzeichen));
             _tileTags.SetValue(tags.Count);
@@ -292,9 +292,8 @@ namespace Prh.UnifiedKonverter.Ui
             _filter.SetText(1, "Mit Hinweisen  " + tags.Count(t => t.Findings.Count > 0));
             _filter.SetText(2, "Umbenennen  " + tags.Count(t => t.IsRenamed));
 
-            int allRename = TagRenamer.Candidates(_result.AllTags).Count;
-            _apply.Text = allRename > 0 ? "Umbenennen übernehmen (" + allRename.ToString("N0") + ")" : "Umbenennen übernehmen";
-            _apply.Enabled = allRename > 0;
+            int allRename = TagListExport.Renamed(_result.AllTags).Count;
+            _apply.Text = allRename > 0 ? "Als Excel exportieren (" + allRename.ToString("N0") + " neue Namen)" : "Als Excel exportieren";
             _apply.Parent?.PerformLayout();
 
             FillGrid();
@@ -413,31 +412,32 @@ namespace Prh.UnifiedKonverter.Ui
 
         // ── Aktionen ────────────────────────────────────────────────────────────
 
-        private void ApplyRenames()
+        private void ExportExcel()
         {
-            List<HmiTagInfo> candidates = TagRenamer.Candidates(_result.AllTags);
-            if (candidates.Count == 0) return;
-            int blocked = _result.AllTags.Count(t => t.IsRenamed && t.Findings.Any(f => f.Kind == FindingKind.Kollision));
+            List<HmiTagInfo> renamed = TagListExport.Renamed(_result.AllTags);
+            int collisions = _result.AllTags.Count(t => t.IsRenamed && t.Findings.Any(f => f.Kind == FindingKind.Kollision));
 
-            StringBuilder text = new StringBuilder();
-            text.AppendLine(candidates.Count.ToString("N0") + " Variablen werden nach der Regel des Converters umbenannt (jedes Zeichen außer A–Z, a–z, 0–9 wird zu „_“).");
-            if (blocked > 0) text.AppendLine().AppendLine(blocked + " Variablen mit Kollision werden ausgelassen – bitte vorher von Hand eindeutig benennen.");
-            text.AppendLine().AppendLine("Alles läuft in einem Schritt und lässt sich in TIA mit „Rückgängig“ zurücknehmen. Bitte trotzdem vorher das Projekt sichern bzw. archivieren.");
-            text.AppendLine().AppendLine("Beispiele:");
-            foreach (HmiTagInfo t in candidates.Take(5)) text.AppendLine("  " + t.Name + "  →  " + t.UnifiedName);
-            if (candidates.Count > 5) text.AppendLine("  …");
+            string dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Unified-Konverter", "Export");
+            string path;
+            using (SaveFileDialog dialog = new SaveFileDialog())
+            {
+                dialog.Title = "Variablenliste für Unified speichern";
+                dialog.Filter = "Excel-Arbeitsmappe (*.xlsx)|*.xlsx";
+                dialog.FileName = TagListExport.FileName;
+                try { Directory.CreateDirectory(dir); dialog.InitialDirectory = dir; }
+                catch (Exception) { }
+                if (dialog.ShowDialog(this) != DialogResult.OK) return;
+                path = dialog.FileName;
+            }
 
-            if (!MessageForm.Confirm("Umbenennen übernehmen?", text.ToString(), "Jetzt umbenennen")) return;
-
-            List<RenameOutcome> outcomes;
             try
             {
                 UseWaitCursor = true;
-                outcomes = UiThread.Invoke(() => _rename(candidates));
+                TagListExport.Write(path, _result.AllTags);
             }
             catch (Exception ex)
             {
-                MessageForm.ShowError("Umbenennen fehlgeschlagen", ex.ToString());
+                MessageForm.ShowError("Export fehlgeschlagen", ex.ToString());
                 return;
             }
             finally
@@ -445,21 +445,10 @@ namespace Prh.UnifiedKonverter.Ui
                 UseWaitCursor = false;
             }
 
-            ProjectChecks.Run(_result);
-            _tables.Invalidate();
-            ShowSelection();
-
-            int ok = outcomes.Count(o => o.Success);
-            List<RenameOutcome> failed = outcomes.Where(o => !o.Success).ToList();
-            _status.Text = ok.ToString("N0") + " Variablen umbenannt" + (failed.Count > 0 ? ", " + failed.Count + " fehlgeschlagen" : "");
-            _status.ForeColor = failed.Count > 0 ? _t.RedText : _t.Text2;
-            if (failed.Count > 0)
-            {
-                StringBuilder details = new StringBuilder();
-                foreach (RenameOutcome o in failed.Take(30)) details.AppendLine(o.OldName + " → " + o.NewName + ": " + o.Error);
-                if (failed.Count > 30) details.AppendLine("…");
-                MessageForm.ShowError(failed.Count + " Variablen nicht umbenannt", details.ToString());
-            }
+            _status.Text = _result.AllTags.Count().ToString("N0") + " Variablen exportiert, davon " + renamed.Count.ToString("N0") + " mit neuem Namen"
+                + (collisions > 0 ? " · " + collisions + " Kollisionen behalten ihren Namen" : "");
+            _status.ForeColor = collisions > 0 ? _t.RedText : _t.Text2;
+            Process.Start("explorer.exe", "/select,\"" + path + "\"");
         }
 
         private void SaveReport()
