@@ -68,27 +68,25 @@ namespace Prh.UnifiedKonverter.Openness
         }
 
         /// <summary>Erster Kompositionsname aus der Liste, den das Objekt anbietet.</summary>
+        /// <remarks>Über den .NET-Typ statt GetCompositionInfos() – siehe <see cref="WritableAttributes"/>.</remarks>
         public static string FirstComposition(IEngineeringObject obj, params string[] candidates)
         {
-            HashSet<string> names = new HashSet<string>(StringComparer.Ordinal);
-            try { foreach (EngineeringCompositionInfo c in obj.GetCompositionInfos()) names.Add(c.Name); }
-            catch (Exception) { return null; }
-            return candidates.FirstOrDefault(names.Contains);
+            Type type = obj.GetType();
+            return candidates.FirstOrDefault(c => type.GetProperty(c, BindingFlags.Public | BindingFlags.Instance) != null);
         }
 
+        /// <summary>
+        /// Schreibbare Eigenschaften aus dem .NET-Typ (Reflection) – ohne Aufruf an TIA. GetAttributeInfos() an einer
+        /// neu angelegten Unified-Variable warf in TIA V20 „Property: ConfirmationType not found“, danach stürzte TIA ab.
+        /// </summary>
         public static HashSet<string> WritableAttributes(IEngineeringObject obj)
         {
-            Protocol.Line("   Attribute abfragen");
             HashSet<string> names = new HashSet<string>(StringComparer.Ordinal);
-            try
+            foreach (PropertyInfo p in obj.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
             {
-                foreach (EngineeringAttributeInfo info in obj.GetAttributeInfos())
-                {
-                    if (info.AccessMode.ToString().IndexOf("Write", StringComparison.OrdinalIgnoreCase) >= 0) names.Add(info.Name);
-                }
+                if (p.GetSetMethod() != null && p.GetIndexParameters().Length == 0) names.Add(p.Name);
             }
-            catch (Exception ex) { Protocol.Line("   Attribute nicht lesbar: " + Unwrap(ex).Message); }
-            Protocol.Line("   schreibbar: " + string.Join(", ", names));
+            Protocol.Line("   schreibbar (" + obj.GetType().Name + "): " + string.Join(", ", names));
             return names;
         }
 
@@ -104,11 +102,15 @@ namespace Prh.UnifiedKonverter.Openness
             Protocol.Line("   " + name + " = " + value);
             try
             {
-                obj.SetAttribute(name, Convert(obj, name, value));
+                PropertyInfo property = obj.GetType().GetProperty(name, BindingFlags.Public | BindingFlags.Instance);
+                if (property != null && property.GetSetMethod() != null) property.SetValue(obj, Convert(obj, name, value));
+                else obj.SetAttribute(name, Convert(obj, name, value));
+                Protocol.Line("   ok");
                 return null;
             }
             catch (Exception ex)
             {
+                Protocol.Line("   Fehler: " + Unwrap(ex).Message);
                 return name + " = „" + value + "“: " + Unwrap(ex).Message;
             }
         }
