@@ -40,7 +40,34 @@ namespace Prh.UnifiedKonverter.Openness
         {
             IEngineeringObject created;
             if (TryCreate(parent, composition, out created, name)) return created;
-            throw new InvalidOperationException("„" + composition + "“ bietet kein Create(Name).");
+
+            // Create(Name, …) mit Standardwerten für die übrigen Parameter
+            object comp = CompositionObject(parent, composition);
+            MethodInfo[] creates = comp == null ? new MethodInfo[0]
+                : comp.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance).Where(m => m.Name == "Create").ToArray();
+            MethodInfo withDefaults = creates.FirstOrDefault(m =>
+            {
+                ParameterInfo[] ps = m.GetParameters();
+                return ps.Length > 0 && ps[0].ParameterType == typeof(string) && ps.Skip(1).All(x => x.HasDefaultValue);
+            });
+            if (withDefaults != null)
+            {
+                object[] args = withDefaults.GetParameters().Select((x, i) => i == 0 ? name : x.DefaultValue).ToArray();
+                Protocol.Line("   anlegen: " + comp.GetType().Name + "." + Signature(withDefaults) + " mit Standardwerten");
+                try { created = (IEngineeringObject)withDefaults.Invoke(comp, args); }
+                catch (TargetInvocationException ex) { throw ex.InnerException ?? ex; }
+                Protocol.Line("   angelegt");
+                return created;
+            }
+
+            string available = creates.Length == 0 ? "keine" : string.Join("; ", creates.Select(Signature));
+            Protocol.Line("   kein passendes Create, vorhanden: " + available);
+            throw new InvalidOperationException("„" + composition + "“ bietet kein Create(Name). Vorhanden: " + available);
+        }
+
+        private static string Signature(MethodInfo m)
+        {
+            return m.Name + "(" + string.Join(", ", m.GetParameters().Select(p => p.ParameterType.Name + " " + p.Name)) + ")";
         }
 
         /// <summary>
@@ -68,11 +95,15 @@ namespace Prh.UnifiedKonverter.Openness
         }
 
         /// <summary>Erster Kompositionsname aus der Liste, den das Objekt anbietet.</summary>
-        /// <remarks>Über den .NET-Typ statt GetCompositionInfos() – siehe <see cref="WritableAttributes"/>.</remarks>
+        /// <remarks>
+        /// Ohne GetCompositionInfos() (siehe <see cref="WritableAttributes"/>): zuerst über den .NET-Typ (Unified),
+        /// sonst über GetComposition(Name) – Comfort/Advanced bietet Kompositionen nicht als .NET-Eigenschaft an.
+        /// </remarks>
         public static string FirstComposition(IEngineeringObject obj, params string[] candidates)
         {
             Type type = obj.GetType();
-            return candidates.FirstOrDefault(c => type.GetProperty(c, BindingFlags.Public | BindingFlags.Instance) != null);
+            string byType = candidates.FirstOrDefault(c => type.GetProperty(c, BindingFlags.Public | BindingFlags.Instance) != null);
+            return byType ?? candidates.FirstOrDefault(c => CompositionObject(obj, c) != null);
         }
 
         /// <summary>
