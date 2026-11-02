@@ -59,9 +59,11 @@ Nach jedem neuen Build: TIA Portal neu starten oder das Add-In in der Taskkarte 
 2. **Unified-Konverter → Für Unified vorbereiten …**
 3. Links die Variablentabellen anklicken, oben die Filter *Mit Hinweisen* und *Umbenennen* ausprobieren.
 4. **Bericht speichern** → der Ordner öffnet sich.
-5. **Als Excel exportieren** → Speicherort wählen (Vorschlag: Dokumente\Unified-Konverter\Export\HMITagList_MIGUNI.xlsx). Danach:
+5. **Als Excel exportieren** → Zielordner wählen (Vorschlag: Dokumente\Unified-Konverter\Export). Es entstehen `HMITagList_MIGUNI.xlsx` und, falls die HMI Textlisten hat, `TextLists_MIGUNI.xlsx`. Danach:
    - Öffnet Excel die Datei ohne Meldung? Stehen die neuen Namen in Spalte A?
    - Lässt sich die Datei in TIA importieren (Variablentabelle → Importieren)? Falls nicht: die Fehlermeldung schicken.
+   - Textlisten: stimmen ListRange, Default entry, Value und die Texte? Lässt sich die Datei in TIA importieren?
+5b. **Meldungen konvertieren …** → TIA-Excel-Export der Meldungen wählen → `Unified_HMI-Alarms.xlsx` speichern.
 6. Gegenprobe: Rechtsklick auf eine SPS → „Für Unified vorbereiten“ meldet „Keine HMI-Variablen gefunden“.
 
 **Schritt 3 – Zu Unified übertragen** (Projekt mit alter HMI **und** Unified-HMI, z. B. nach Data2Unified):

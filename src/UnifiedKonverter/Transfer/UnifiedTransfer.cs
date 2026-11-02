@@ -80,6 +80,7 @@ namespace Prh.UnifiedKonverter.Transfer
             if (options.Tags && _source.Tags != null)
             {
                 HashSet<string> existing = Names(Target(), "Tags");
+                Dictionary<string, HmiTagInfo> seen = new Dictionary<string, HmiTagInfo>(StringComparer.OrdinalIgnoreCase);
                 foreach (HmiTagInfo tag in _source.Tags.AllTags)
                 {
                     string name = tag.UnifiedName ?? ConverterRules.CleanTagName(tag.Name);
@@ -88,10 +89,21 @@ namespace Prh.UnifiedKonverter.Transfer
                         Kind = TransferKind.Variable, SourceName = tag.Name, TargetName = name, Container = tag.Table.Name,
                         State = existing.Contains(name) ? TransferState.Vorhanden : TransferState.Neu, Payload = tag,
                     };
+                    HmiTagInfo first;
                     if (tag.Findings.Any(f => f.Kind == FindingKind.Kollision))
                     {
                         item.State = TransferState.Übersprungen;
                         item.Notes.Add("Kollision – erst in Schritt 1 eindeutig benennen");
+                    }
+                    else if (seen.TryGetValue(name, out first))
+                    {
+                        // Gleicher Unified-Name aus einer anderen Tabelle oder HMI: nicht überschreiben.
+                        item.State = TransferState.Übersprungen;
+                        item.Notes.Add("doppelt – schon aus " + first.Table.Device.Name + " › " + first.Table.Name);
+                    }
+                    else
+                    {
+                        seen[name] = tag;
                     }
                     items.Add(item);
                 }
@@ -99,14 +111,21 @@ namespace Prh.UnifiedKonverter.Transfer
             if (options.TextLists)
             {
                 HashSet<string> existing = Names(Target(), "TextLists");
+                HashSet<string> seenLists = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                 foreach (SourceTextList tl in _source.TextLists)
                 {
                     string name = ConverterRules.CleanTextListName(tl.Name);
-                    items.Add(new TransferItem
+                    TransferItem item = new TransferItem
                     {
                         Kind = TransferKind.Textliste, SourceName = tl.Name, TargetName = name, Container = tl.Entries.Count + " Einträge",
                         State = existing.Contains(name) ? TransferState.Vorhanden : TransferState.Neu, Payload = tl,
-                    });
+                    };
+                    if (!seenLists.Add(name))
+                    {
+                        item.State = TransferState.Übersprungen;
+                        item.Notes.Add("doppelt – gleichnamige Textliste schon in der Liste");
+                    }
+                    items.Add(item);
                 }
             }
             if (options.Alarms)

@@ -17,6 +17,8 @@ Umgesetzt:
 - Fenster: links die **Variablentabellen zum Anklicken**, rechts Kennzahlen, Filter (*Alle / Mit Hinweisen / Umbenennen*), Suche und die Variablenliste mit *Name in Unified* und Hinweisen. Vorschau: [vorschau/schritt1.html](vorschau/schritt1.html)
 - Prüfungen: Sonderzeichen (Converter-Regel), **Kollisionen nach der Bereinigung** (z. B. `A.B` und `A_B`), Erfassungszyklus unter 250 ms, Erfassungsart „Zyklisch fortlaufend“, UInt, String- und Array-Variablen.
 - **Als Excel exportieren** (ab 0.4, ersetzt „Umbenennen übernehmen“): alle Variablen mit den bereinigten Namen als `HMITagList_MIGUNI.xlsx` (Blatt „Hmi Tags“, Spalten Name, Path, Connection, PLC tag, DataType, Length). Variablen mit Kollision behalten ihren Namen. Die alte HMI bleibt unverändert.
+- **Textlisten** (ab 0.5): direkt aus dem Projekt (Openness) als `TextLists_MIGUNI.xlsx` im Aufbau des TIA-Exports (Blätter `TextList`, `TextListEntry`, Spalte `FieldInfos` leer). Namen nach Regel „Textlisten“ in `TextList!A` und `TextListEntry!B`, leere Sprachen mit einer anderen Sprache bzw. „—“ gefüllt. Die Zuordnung der Openness-Attribute (ListRange, Default entry, Value) steht im Protokoll `Vorbereitung_….log` und muss am echten Projekt bestätigt werden.
+- **HMI-Meldungen** (ab 0.5): Button „Meldungen konvertieren …“ – TIA-Excel-Export der Meldungen → `Unified_HMI-Alarms.xlsx` (DiscreteAlarms, 44 Spalten), zellgleich mit dem Web-Converter. Comfort/Advanced liefert Meldungen nicht über Openness.
 - **Bericht speichern**: `Pruefung.csv`, `Attribute.csv`, `Struktur.txt`.
 
 Offen bzw. als Nächstes:

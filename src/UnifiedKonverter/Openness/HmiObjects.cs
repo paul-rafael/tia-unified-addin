@@ -165,6 +165,25 @@ namespace Prh.UnifiedKonverter.Openness
             return null;
         }
 
+        /// <summary>Alle HMI-Geräte (HmiTarget/HmiSoftware) einer Auswahl, ohne Doppelte.</summary>
+        public static List<IEngineeringObject> FindAllHmiIn(IEnumerable<IEngineeringObject> selection)
+        {
+            List<IEngineeringObject> found = new List<IEngineeringObject>();
+            foreach (IEngineeringObject obj in selection)
+            {
+                IEngineeringObject hmi = FindHmiIn(new[] { obj });
+                if (hmi != null && !found.Contains(hmi)) found.Add(hmi);
+                if (hmi == null || !IsDevice(obj)) continue;
+                // Ein Gerät kann mehrere HMI-Teile haben (selten) – alle einsammeln.
+                foreach (IEngineeringObject child in Composition(obj, "DeviceItems"))
+                {
+                    IEngineeringObject more = FindHmiInDevice(child, 1);
+                    if (more != null && !found.Contains(more)) found.Add(more);
+                }
+            }
+            return found;
+        }
+
         private static IEngineeringObject FindHmiInDevice(IEngineeringObject item, int depth)
         {
             if (depth > 6) return null;
