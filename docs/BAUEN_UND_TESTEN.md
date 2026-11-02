@@ -74,6 +74,13 @@ Nach jedem neuen Build: TIA Portal neu starten oder das Add-In in der Taskkarte 
 4. Liste prüfen (Filter *Neu / Vorhanden / Fehler und Hinweise*) → **Übertragen** → Rückfrage bestätigen.
 5. Danach die Ergebnisliste ansehen und mit **Liste speichern** sichern. In TIA kontrollieren: Variablen (Verbindung, PLC-Variable, Zyklus), Textlisten (Einträge, Texte), Meldungen (Klasse, Trigger, Text). **Rückgängig** muss alles in einem Schritt zurücknehmen.
 
+**HMI Event Exporter** (Comfort/Advanced-Gerät, am besten mit Variablen, an denen Ereignisse konfiguriert sind):
+
+1. Rechtsklick auf das HMI-Gerät → **HMI Event Exporter → Variablen inklusive Events exportieren …**
+2. Stimmen Gerät, Anzahl Tabellen und Variablen? → **Export starten** → Speicherort wählen.
+3. ZIP öffnen: je Variable eine XML-Datei unter `Tags/`, dazu `manifest.json` und `Report/export-report.json`.
+4. Die XML-Datei einer Variable mit Ereignissen prüfen, siehe [HMI_EVENT_EXPORTER.md](HMI_EVENT_EXPORTER.md), Abschnitt „Phase 1“.
+
 ## 06 · Was ich von dir zurück brauche
 
 Bitte schick mir (hier im Chat):

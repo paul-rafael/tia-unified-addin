@@ -25,6 +25,7 @@ namespace Prh.UnifiedKonverter
         protected override IEnumerable<ContextMenuAddIn> GetContextMenuAddIns()
         {
             yield return new KonverterAddIn(_tiaPortal);
+            yield return new EventExporterAddIn(_tiaPortal);
         }
     }
 }

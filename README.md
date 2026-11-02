@@ -16,7 +16,8 @@ Ablauf einer Migration:
 | 0.2 | Schritt 1 für HMI-Variablen: alle Tabellen eines Geräts, Prüfung vor Data2Unified, Umbenennen nach Bestätigung, Bericht. [Vorschau](docs/vorschau/schritt1.html) |
 | 0.3 | Schritt 3: Ziel-Unified-HMI wählen, Variablen, Textlisten und Bitmeldungen übertragen (Meldungen auch aus dem TIA-Excel-Export), Vorschau, Ergebnisliste. [Vorschau](docs/vorschau/schritt3.html) |
 | 0.4 | Schritt 1 exportiert die bereinigten Namen als Excel-Liste (`HMITagList_MIGUNI.xlsx`, Blatt „Hmi Tags“), weil sich Comfort/Advanced-Variablen per Openness nicht umbenennen lassen. Schritt 3 schreibt ein Laufprotokoll (Dokumente\Unified-Konverter\Protokolle). |
-| **0.5** | Schritt 1: Textlisten direkt aus dem Projekt als `TextLists_MIGUNI.xlsx` (Regel „Textlisten“), HMI-Meldungen aus dem TIA-Export als `Unified_HMI-Alarms.xlsx` (Regel „HMI-Meldungen“, zellgleich mit dem Web-Converter 1.2.0). Schritt 3: alle markierten alten HMIs mit allen Tabellen, doppelte Namen werden übersprungen. |
+| 0.5 | Schritt 1: Textlisten direkt aus dem Projekt als `TextLists_MIGUNI.xlsx` (Regel „Textlisten“), HMI-Meldungen aus dem TIA-Export als `Unified_HMI-Alarms.xlsx` (Regel „HMI-Meldungen“, zellgleich mit dem Web-Converter 1.2.0). Schritt 3: alle markierten alten HMIs mit allen Tabellen, doppelte Namen werden übersprungen. |
+| **0.6** | **HMI Event Exporter:** eigenes Kontextmenü am HMI-Gerät, exportiert alle Variablen einzeln als SimaticML-XML (inkl. Ereignisse) mit Manifest und Bericht in ein ZIP für den HMI Event Converter. [Beschreibung](docs/HMI_EVENT_EXPORTER.md) |
 
 Unterstützt: **TIA Portal V20 und V21**, je ein eigener Build.
 
@@ -25,6 +26,7 @@ Unterstützt: **TIA Portal V20 und V21**, je ein eigener Build.
 - [docs/PLAN.md](docs/PLAN.md) – Ablauf Schritt 1–3, Stand und nächste Schritte
 - [docs/MACHBARKEIT.md](docs/MACHBARKEIT.md) – was die Add-In-API für Comfort/Advanced und Unified lesen und ändern kann, mit Einschränkungen
 - [docs/BAUEN_UND_TESTEN.md](docs/BAUEN_UND_TESTEN.md) – bauen, installieren und testen, Schritt für Schritt
+- [docs/HMI_EVENT_EXPORTER.md](docs/HMI_EVENT_EXPORTER.md) – HMI Event Exporter: Aufbau, ZIP-Format, Stand der Phasen, Prüfung der Event-Daten
 - Projektstand, Entscheidungen und Log außerhalb des Repos: Obsidian-Vault, `Projekte/TIA-Unified-AddIn/Übersicht.md` und `Log.md`
 
 ## Kurzanleitung
@@ -49,7 +51,8 @@ src/UnifiedKonverter/
   Openness/                             Lesen der HMI-Objekte, Schreiben in die Unified-HMI
   Rules/                                Converter-Regeln (Variablen, Textlisten, Meldungen) und Prüfungen
   Transfer/                             Schritt 3: Quelle lesen, Plan, Übertragen in die Unified-HMI
-  Excel/                                Lesen des TIA-Excel-Exports der Meldungen
+  EventExport/                          HMI Event Exporter: Variablen einzeln als XML, Manifest, Bericht, ZIP
+  Excel/                                Excel lesen und schreiben (TIA-Exporte, Listen für Unified)
   Report/                               CSV-Bericht, Excel-Variablenliste, Laufprotokoll
   Ui/                                   Fenster nach PRH Design Kit (Schwarz/Weiß, Dunkelrot)
   Publisher/                            Paket-Konfiguration je TIA-Version
