@@ -109,6 +109,14 @@
       <UserAddInsDir>$(APPDATA)\Siemens\Automation\Portal V$(TiaVersion)\UserAddIns\</UserAddInsDir>
     </PropertyGroup>
     <Error Condition="!Exists('$(TiaPublisherExe)')" Text="Publisher nicht gefunden: $(TiaPublisherExe)" />
+    <!-- Der Siemens-Publisher verlangt 10–120 Zeichen je Begründung – vorher prüfen, mit verständlicher Meldung -->
+    <XmlPeek XmlInputPath="$(ProjectDir)Publisher\AddInPublisherConfig.V$(TiaVersion).xml"
+             Query="//p:JustificationComment/text()"
+             Namespaces="&lt;Namespace Prefix='p' Uri='http://www.siemens.com/automation/Openness/AddIn/Publisher/V$(TiaVersion)' /&gt;">
+      <Output TaskParameter="Result" ItemName="_Justification" />
+    </XmlPeek>
+    <Error Condition="'%(_Justification.Identity)' != '' And ($([System.String]::Copy('%(_Justification.Identity)').Length) &lt; 10 Or $([System.String]::Copy('%(_Justification.Identity)').Length) &gt; 120)"
+           Text="JustificationComment in Publisher\AddInPublisherConfig.V$(TiaVersion).xml muss 10–120 Zeichen lang sein: %(_Justification.Identity)" />
     <Copy SourceFiles="$(ProjectDir)Publisher\AddInPublisherConfig.V$(TiaVersion).xml" DestinationFiles="$(_OutAbs)AddInPublisherConfig.xml" />
     <Delete Files="$(AddInPackage)" />
     <Exec Command="&quot;$(TiaPublisherExe)&quot; -f &quot;$(_OutAbs)AddInPublisherConfig.xml&quot; -l &quot;$(_OutAbs)Publisher.log&quot; -v -c -o &quot;$(AddInPackage)&quot;" />
