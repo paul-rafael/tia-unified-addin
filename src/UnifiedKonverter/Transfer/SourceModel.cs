@@ -19,6 +19,7 @@ namespace Prh.UnifiedKonverter.Transfer
     {
         public string Name;
         public Dictionary<string, string> Attributes = new Dictionary<string, string>(StringComparer.Ordinal);
+        public Dictionary<string, string> Comments = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         public List<SourceTextListEntry> Entries = new List<SourceTextListEntry>();
     }
 
@@ -62,6 +63,7 @@ namespace Prh.UnifiedKonverter.Transfer
             {
                 SourceTextList tl = new SourceTextList { Name = HmiObjects.NameOf(list) };
                 ReadSimple(list, tl.Attributes);
+                tl.Comments = EngineeringWrite.ReadMultilingual(list, "Comment");
                 string comp = EngineeringWrite.FirstComposition(list, EntryCompositions);
                 if (comp != null)
                 {

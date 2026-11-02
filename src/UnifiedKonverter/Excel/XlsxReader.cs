@@ -71,7 +71,7 @@ namespace Prh.UnifiedKonverter.Excel
             if (type == "inlineStr")
             {
                 XElement isElement = c.Element(Main + "is");
-                return isElement == null ? string.Empty : string.Concat(isElement.Descendants(Main + "t").Select(t => t.Value));
+                return isElement == null ? string.Empty : Decode(string.Concat(isElement.Descendants(Main + "t").Select(t => t.Value)));
             }
             string v = (string)c.Element(Main + "v") ?? string.Empty;
             if (type == "s")
@@ -80,7 +80,8 @@ namespace Prh.UnifiedKonverter.Excel
                 return int.TryParse(v, NumberStyles.Integer, CultureInfo.InvariantCulture, out index) && index < shared.Count ? shared[index] : string.Empty;
             }
             if (type == "b") return v == "1" ? "TRUE" : "FALSE";
-            if (type == "str" || type == "e") return v;
+            if (type == "str") return Decode(v);
+            if (type == "e") return v;
             double d;
             if (v.Length > 0 && double.TryParse(v, NumberStyles.Float, CultureInfo.InvariantCulture, out d))
             {
@@ -89,12 +90,32 @@ namespace Prh.UnifiedKonverter.Excel
             return v;
         }
 
+        private static readonly System.Text.RegularExpressions.Regex Escaped = new System.Text.RegularExpressions.Regex("_x([0-9A-Fa-f]{4})_");
+
+        /// <summary>OOXML-Kodierung „_xHHHH_“ auflösen (Excel schreibt so z. B. CR als „_x000D_“).</summary>
+        private static string Decode(string s)
+        {
+            return s.IndexOf("_x", StringComparison.Ordinal) < 0 ? s
+                : Escaped.Replace(s, m => ((char)int.Parse(m.Groups[1].Value, NumberStyles.HexNumber, CultureInfo.InvariantCulture)).ToString());
+        }
+
+        /// <summary>Namen aller Tabellenblätter in Reihenfolge.</summary>
+        public static List<string> SheetNames(string path)
+        {
+            using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            using (ZipArchive zip = new ZipArchive(fs, ZipArchiveMode.Read))
+            {
+                XDocument wb = Load(zip, "xl/workbook.xml");
+                return wb == null ? new List<string>() : wb.Descendants(Main + "sheet").Select(x => (string)x.Attribute("name") ?? "").ToList();
+            }
+        }
+
         private static List<string> ReadSharedStrings(ZipArchive zip)
         {
             XDocument doc = Load(zip, "xl/sharedStrings.xml");
             if (doc == null) return new List<string>();
             return doc.Root.Elements(Main + "si")
-                .Select(si => string.Concat(si.Descendants(Main + "t").Where(t => t.Parent.Name != Main + "rPh").Select(t => t.Value)))
+                .Select(si => Decode(string.Concat(si.Descendants(Main + "t").Where(t => t.Parent.Name != Main + "rPh").Select(t => t.Value))))
                 .ToList();
         }
 

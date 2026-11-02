@@ -248,7 +248,7 @@ namespace Prh.UnifiedKonverter.Ui
                 }
             }
 
-            UpdateCard(_cardTags, all, TransferKind.Variable, _source.Tags == null ? null : _source.Tags.Tables.Count + " Tabellen der alten HMI");
+            UpdateCard(_cardTags, all, TransferKind.Variable, _source.Tags == null ? null : _source.Tags.Tables.Count + " Tabellen aus " + _source.Tags.Devices.Count + (_source.Tags.Devices.Count == 1 ? " alten HMI" : " alten HMIs"));
             UpdateCard(_cardLists, all, TransferKind.Textliste, _source.TextListSource);
             UpdateCard(_cardAlarms, all, TransferKind.Meldung, _source.AlarmSource);
 

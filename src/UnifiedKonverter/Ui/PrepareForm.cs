@@ -9,6 +9,7 @@ using System.Windows.Forms;
 using Prh.UnifiedKonverter.Openness;
 using Prh.UnifiedKonverter.Report;
 using Prh.UnifiedKonverter.Rules;
+using Prh.UnifiedKonverter.Transfer;
 
 namespace Prh.UnifiedKonverter.Ui
 {
@@ -20,6 +21,7 @@ namespace Prh.UnifiedKonverter.Ui
     internal sealed class PrepareForm : Form
     {
         private readonly ReadResult _result;
+        private readonly SourceData _extra;
         private readonly Theme _t = Theme.Current();
 
         private readonly ListBox _tables = new ListBox();
@@ -39,9 +41,10 @@ namespace Prh.UnifiedKonverter.Ui
             public HmiTableInfo Table; // null = alle Tabellen
         }
 
-        public PrepareForm(ReadResult result)
+        public PrepareForm(ReadResult result, SourceData extra)
         {
             _result = result;
+            _extra = extra;
 
             Text = "Unified-Konverter · Für Unified vorbereiten";
             StartPosition = FormStartPosition.CenterScreen;
@@ -186,8 +189,14 @@ namespace Prh.UnifiedKonverter.Ui
             report.Click += (s, e) => SaveReport();
             PrButton close = new PrButton(_t, PrButton.Style.Ghost, "Schließen");
             close.Click += (s, e) => Close();
+            PrButton alarms = new PrButton(_t, PrButton.Style.Ghost, "Meldungen konvertieren …");
+            alarms.Click += (s, e) => ConvertAlarms();
 
-            footer.Controls.AddRange(new Control[] { logo, author, _status, close, report, _apply });
+            _status.Text = _extra.TextLists.Count > 0
+                ? _extra.TextLists.Count + " Textlisten mit " + _extra.TextLists.Sum(l => l.Entries.Count) + " Einträgen werden mit exportiert"
+                : "Keine Textlisten gefunden";
+
+            footer.Controls.AddRange(new Control[] { logo, author, _status, close, report, alarms, _apply });
             footer.Layout += (s, e) =>
             {
                 int cy = footer.Height / 2;
@@ -195,7 +204,7 @@ namespace Prh.UnifiedKonverter.Ui
                 author.Location = new Point(logo.Right + 8, cy - author.Height / 2);
                 _status.Location = new Point(author.Right + 24, cy - _status.Height / 2);
                 int x = footer.Width - footer.Padding.Right;
-                foreach (PrButton b in new[] { _apply, report, close })
+                foreach (PrButton b in new[] { _apply, alarms, report, close })
                 {
                     x -= b.Width;
                     b.Location = new Point(x, cy - b.Height / 2);
@@ -417,23 +426,30 @@ namespace Prh.UnifiedKonverter.Ui
             List<HmiTagInfo> renamed = TagListExport.Renamed(_result.AllTags);
             int collisions = _result.AllTags.Count(t => t.IsRenamed && t.Findings.Any(f => f.Kind == FindingKind.Kollision));
 
-            string dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Unified-Konverter", "Export");
-            string path;
-            using (SaveFileDialog dialog = new SaveFileDialog())
+            string dir;
+            using (FolderBrowserDialog dialog = new FolderBrowserDialog())
             {
-                dialog.Title = "Variablenliste für Unified speichern";
-                dialog.Filter = "Excel-Arbeitsmappe (*.xlsx)|*.xlsx";
-                dialog.FileName = TagListExport.FileName;
-                try { Directory.CreateDirectory(dir); dialog.InitialDirectory = dir; }
+                dialog.Description = "Zielordner für " + TagListExport.FileName + (_extra.TextLists.Count > 0 ? " und " + TextListExport.FileName : "");
+                string start = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Unified-Konverter", "Export");
+                try { Directory.CreateDirectory(start); dialog.SelectedPath = start; }
                 catch (Exception) { }
                 if (dialog.ShowDialog(this) != DialogResult.OK) return;
-                path = dialog.FileName;
+                dir = dialog.SelectedPath;
             }
 
+            List<string> parts = new List<string>();
             try
             {
                 UseWaitCursor = true;
-                TagListExport.Write(path, _result.AllTags);
+                TagListExport.Write(Path.Combine(dir, TagListExport.FileName), _result.AllTags);
+                parts.Add(_result.AllTags.Count().ToString("N0") + " Variablen (" + renamed.Count.ToString("N0") + " neue Namen"
+                    + (collisions > 0 ? ", " + collisions + " Kollisionen unverändert" : "") + ")");
+                if (_extra.TextLists.Count > 0)
+                {
+                    TextListExport.Result tl = TextListExport.Write(Path.Combine(dir, TextListExport.FileName), _extra.TextLists);
+                    parts.Add(tl.Lists + " Textlisten mit " + tl.Entries + " Einträgen (" + tl.RenamedLists + " neue Namen"
+                        + (tl.FilledTexts > 0 ? ", " + tl.FilledTexts + " leere Texte gefüllt" : "") + ")");
+                }
             }
             catch (Exception ex)
             {
@@ -445,10 +461,50 @@ namespace Prh.UnifiedKonverter.Ui
                 UseWaitCursor = false;
             }
 
-            _status.Text = _result.AllTags.Count().ToString("N0") + " Variablen exportiert, davon " + renamed.Count.ToString("N0") + " mit neuem Namen"
-                + (collisions > 0 ? " · " + collisions + " Kollisionen behalten ihren Namen" : "");
+            _status.Text = "Exportiert: " + string.Join(" · ", parts);
             _status.ForeColor = collisions > 0 ? _t.RedText : _t.Text2;
-            Process.Start("explorer.exe", "/select,\"" + path + "\"");
+            Process.Start("explorer.exe", "\"" + dir + "\"");
+        }
+
+        /// <summary>HMI-Meldungen: TIA-Excel-Export der alten HMI → Unified-Alarmliste (Converter-Regel „HMI-Meldungen“).</summary>
+        private void ConvertAlarms()
+        {
+            string source;
+            using (OpenFileDialog dialog = new OpenFileDialog())
+            {
+                dialog.Title = "TIA-Excel-Export der HMI-Meldungen wählen";
+                dialog.Filter = "Excel-Arbeitsmappe (*.xlsx;*.xlsm)|*.xlsx;*.xlsm";
+                if (dialog.ShowDialog(this) != DialogResult.OK) return;
+                source = dialog.FileName;
+            }
+            string target;
+            using (SaveFileDialog dialog = new SaveFileDialog())
+            {
+                dialog.Title = "Unified-Meldungsliste speichern";
+                dialog.Filter = "Excel-Arbeitsmappe (*.xlsx)|*.xlsx";
+                dialog.FileName = AlarmListExport.FileName;
+                dialog.InitialDirectory = Path.GetDirectoryName(source);
+                if (dialog.ShowDialog(this) != DialogResult.OK) return;
+                target = dialog.FileName;
+            }
+
+            try
+            {
+                UseWaitCursor = true;
+                AlarmListExport.Result r = AlarmListExport.Convert(source, target);
+                _status.Text = r.Alarms.ToString("N0") + " Meldungen konvertiert, davon " + r.WithParameters + " mit Variablen im Meldetext";
+                _status.ForeColor = _t.Text2;
+            }
+            catch (Exception ex)
+            {
+                MessageForm.ShowError("Meldungen nicht konvertiert", ex is System.IO.InvalidDataException ? ex.Message : ex.ToString());
+                return;
+            }
+            finally
+            {
+                UseWaitCursor = false;
+            }
+            Process.Start("explorer.exe", "/select,\"" + target + "\"");
         }
 
         private void SaveReport()

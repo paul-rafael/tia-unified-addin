@@ -15,7 +15,8 @@ Ablauf einer Migration:
 | 0.1 | Machbarkeitstest: Variablen einer Tabelle auflisten (nur lesend) |
 | 0.2 | Schritt 1 für HMI-Variablen: alle Tabellen eines Geräts, Prüfung vor Data2Unified, Umbenennen nach Bestätigung, Bericht. [Vorschau](docs/vorschau/schritt1.html) |
 | 0.3 | Schritt 3: Ziel-Unified-HMI wählen, Variablen, Textlisten und Bitmeldungen übertragen (Meldungen auch aus dem TIA-Excel-Export), Vorschau, Ergebnisliste. [Vorschau](docs/vorschau/schritt3.html) |
-| **0.4** | Schritt 1 exportiert die bereinigten Namen als Excel-Liste (`HMITagList_MIGUNI.xlsx`, Blatt „Hmi Tags“), weil sich Comfort/Advanced-Variablen per Openness nicht umbenennen lassen. Schritt 3 schreibt ein Laufprotokoll (Dokumente\Unified-Konverter\Protokolle). |
+| 0.4 | Schritt 1 exportiert die bereinigten Namen als Excel-Liste (`HMITagList_MIGUNI.xlsx`, Blatt „Hmi Tags“), weil sich Comfort/Advanced-Variablen per Openness nicht umbenennen lassen. Schritt 3 schreibt ein Laufprotokoll (Dokumente\Unified-Konverter\Protokolle). |
+| **0.5** | Schritt 1: Textlisten direkt aus dem Projekt als `TextLists_MIGUNI.xlsx` (Regel „Textlisten“), HMI-Meldungen aus dem TIA-Export als `Unified_HMI-Alarms.xlsx` (Regel „HMI-Meldungen“, zellgleich mit dem Web-Converter 1.2.0). Schritt 3: alle markierten alten HMIs mit allen Tabellen, doppelte Namen werden übersprungen. |
 
 Unterstützt: **TIA Portal V20 und V21**, je ein eigener Build.
 
