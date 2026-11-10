@@ -145,7 +145,7 @@ namespace Prh.UnifiedKonverter.Ui
             layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 48));   // Filter + Suche
             layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));   // Liste
 
-            _eyebrow.Font = Theme.Eyebrow; _eyebrow.ForeColor = _t.RedText; _eyebrow.AutoSize = true; _eyebrow.Margin = new Padding(0, 0, 0, 6);
+            _eyebrow.Font = Theme.Eyebrow; _eyebrow.ForeColor = _t.Text3; _eyebrow.AutoSize = true; _eyebrow.Margin = new Padding(0, 0, 0, 6);
             _title.Font = Theme.Title; _title.ForeColor = _t.Text; _title.AutoSize = true; _title.Margin = new Padding(0, 0, 0, 6);
             _lead.ForeColor = _t.Text2; _lead.AutoSize = true; _lead.Margin = new Padding(0, 0, 0, 18);
 
@@ -333,7 +333,7 @@ namespace Prh.UnifiedKonverter.Ui
                 if (t.IsRenamed)
                 {
                     bool blocked = t.Findings.Any(f => f.Kind == FindingKind.Kollision);
-                    unified.Style.ForeColor = _t.RedText;
+                    unified.Style.ForeColor = _t.AccentText;
                     unified.Style.Font = blocked ? Theme.Mono : Theme.MonoStrong;
                 }
                 else
@@ -374,7 +374,7 @@ namespace Prh.UnifiedKonverter.Ui
                     g.FillPath(b, path);
                     g.DrawPath(p, path);
                 }
-                using (SolidBrush red = new SolidBrush(_t.Red)) g.FillRectangle(red, card.X, card.Y + 10, 2, card.Height - 20);
+                using (SolidBrush red = new SolidBrush(_t.Accent)) g.FillRectangle(red, card.X, card.Y + 10, 2, card.Height - 20);
             }
 
             string title = item.Table == null ? "Alle Tabellen" : item.Table.Name;
@@ -384,7 +384,7 @@ namespace Prh.UnifiedKonverter.Ui
 
             Rectangle text = new Rectangle(card.X + 12, card.Y + 6, card.Width - 70, 20);
             TextRenderer.DrawText(g, title, selected ? Theme.Strong : Theme.Body, text, _t.Text, TextFormatFlags.EndEllipsis | TextFormatFlags.NoPadding);
-            TextRenderer.DrawText(g, sub, Theme.Small, new Rectangle(text.X, text.Y + 21, text.Width, 18), warnings > 0 ? _t.RedText : _t.Text3, TextFormatFlags.EndEllipsis | TextFormatFlags.NoPadding);
+            TextRenderer.DrawText(g, sub, Theme.Small, new Rectangle(text.X, text.Y + 21, text.Width, 18), warnings > 0 ? _t.SignalText : _t.Text3, TextFormatFlags.EndEllipsis | TextFormatFlags.NoPadding);
 
             string countText = count.ToString("N0");
             Size size = TextRenderer.MeasureText(countText, Theme.Small);
@@ -409,7 +409,7 @@ namespace Prh.UnifiedKonverter.Ui
                 Rectangle r = new Rectangle(e.CellBounds.X + (e.CellBounds.Width - d) / 2, e.CellBounds.Y + (e.CellBounds.Height - d) / 2, d, d);
                 if (tag.HasWarning)
                 {
-                    using (SolidBrush b = new SolidBrush(_t.Red)) e.Graphics.FillEllipse(b, r);
+                    using (SolidBrush b = new SolidBrush(_t.Signal)) e.Graphics.FillEllipse(b, r);
                 }
                 else
                 {
@@ -462,7 +462,7 @@ namespace Prh.UnifiedKonverter.Ui
             }
 
             _status.Text = "Exportiert: " + string.Join(" · ", parts);
-            _status.ForeColor = collisions > 0 ? _t.RedText : _t.Text2;
+            _status.ForeColor = collisions > 0 ? _t.SignalText : _t.Text2;
             Process.Start("explorer.exe", "\"" + dir + "\"");
         }
 
@@ -519,7 +519,7 @@ namespace Prh.UnifiedKonverter.Ui
             catch (Exception ex)
             {
                 _status.Text = "Speichern fehlgeschlagen: " + ex.Message;
-                _status.ForeColor = _t.RedText;
+                _status.ForeColor = _t.SignalText;
             }
         }
     }

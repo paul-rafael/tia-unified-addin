@@ -54,7 +54,7 @@ src/UnifiedKonverter/
   EventExport/                          HMI Event Exporter: Variablen einzeln als XML, Manifest, Bericht, ZIP
   Excel/                                Excel lesen und schreiben (TIA-Exporte, Listen für Unified)
   Report/                               CSV-Bericht, Excel-Variablenliste, Laufprotokoll
-  Ui/                                   Fenster nach PRH Design Kit (Schwarz/Weiß, Dunkelrot)
+  Ui/                                   Fenster nach PRH Design Kit (Schwarz/Weiß, neutraler Akzent)
   Publisher/                            Paket-Konfiguration je TIA-Version
 build.ps1                               Bauen + Paketieren
 Bauen.cmd, tools/BauenFenster.ps1       Fenster zum Bauen (Doppelklick)

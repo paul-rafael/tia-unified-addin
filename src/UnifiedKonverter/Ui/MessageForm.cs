@@ -39,14 +39,14 @@ namespace Prh.UnifiedKonverter.Ui
                 form.KeyPreview = true;
                 form.KeyDown += (s, e) => { if (e.KeyCode == Keys.Escape) form.Close(); };
 
-                Label eyebrow = new Label { Text = eyebrowText, Font = Theme.Eyebrow, ForeColor = t.RedText, AutoSize = true, Margin = new Padding(0, 0, 0, 6) };
+                Label eyebrow = new Label { Text = eyebrowText, Font = Theme.Eyebrow, ForeColor = t.Text3, AutoSize = true, Margin = new Padding(0, 0, 0, 6) };
                 Label head = new Label { Text = title, Font = Theme.Title, AutoSize = true, Margin = new Padding(0, 0, 0, 12) };
                 TextBox box = new TextBox
                 {
                     Text = text.Replace("\r\n", "\n").Replace("\n", "\r\n"),
                     Multiline = true, ReadOnly = true, ScrollBars = isError ? ScrollBars.Both : ScrollBars.Vertical, WordWrap = !isError,
                     Dock = DockStyle.Fill, Font = isError ? Theme.Mono : Theme.Body,
-                    BackColor = isError ? t.RedSoft : t.Bg, ForeColor = isError ? t.Text : t.Text2,
+                    BackColor = isError ? t.SignalSoft : t.Bg, ForeColor = isError ? t.Text : t.Text2,
                     BorderStyle = isError ? BorderStyle.FixedSingle : BorderStyle.None, TabStop = false,
                 };
 

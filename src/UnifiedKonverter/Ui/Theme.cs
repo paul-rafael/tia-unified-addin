@@ -7,12 +7,12 @@ namespace Prh.UnifiedKonverter.Ui
 {
     /// <summary>
     /// Farben und Schriften nach PRH Design Kit (brand/DESIGN.md im Converter-Repo).
-    /// Dunkelrot ist der einzige Farbakzent, Schwarz (dunkel: Weiß) der Zweitakzent, keine Blautöne.
+    /// Neutraler Akzent: Schwarz (dunkel: Weiß) und Hellgrau, keine Akzentfarbe. Gedämpftes Rot (Signal) nur für Fehler und Warnungen.
     /// Hell/Dunkel folgt der Windows-Einstellung „App-Modus“.
     /// </summary>
     internal sealed class Theme
     {
-        public Color Bg, Surface2, Border, BorderStrong, Text, Text2, Text3, Red, RedHover, RedText, RedSoft, Ink, InkSoft, OnInk;
+        public Color Bg, Surface2, Border, BorderStrong, Text, Text2, Text3, Accent, AccentHover, AccentText, AccentSoft, OnAccent, Signal, SignalText, SignalSoft, Ink, InkSoft, OnInk;
         public bool Dark;
 
         public static readonly Font Body = new Font("Segoe UI", 9.75f, FontStyle.Regular);
@@ -37,7 +37,8 @@ namespace Prh.UnifiedKonverter.Ui
                 Dark = false,
                 Bg = Hex("#ffffff"), Surface2 = Hex("#f8f8f8"), Border = Hex("#e7e7e7"), BorderStrong = Hex("#d2d2d2"),
                 Text = Hex("#121212"), Text2 = Hex("#4b4b4b"), Text3 = Hex("#8a8a8a"),
-                Red = Hex("#8a0b18"), RedHover = Hex("#6d0812"), RedText = Hex("#8a0b18"), RedSoft = Hex("#f9ecee"),
+                Accent = Hex("#121212"), AccentHover = Hex("#333333"), AccentText = Hex("#121212"), AccentSoft = Hex("#f2f2f2"), OnAccent = Hex("#ffffff"),
+                Signal = Hex("#8a0b18"), SignalText = Hex("#8a0b18"), SignalSoft = Hex("#f9ecee"),
                 Ink = Hex("#121212"), InkSoft = Hex("#f4f4f4"), OnInk = Hex("#ffffff"),
             };
         }
@@ -49,7 +50,8 @@ namespace Prh.UnifiedKonverter.Ui
                 Dark = true,
                 Bg = Hex("#0a0a0a"), Surface2 = Hex("#161616"), Border = Hex("#232323"), BorderStrong = Hex("#343434"),
                 Text = Hex("#f0f0f0"), Text2 = Hex("#b5b5b5"), Text3 = Hex("#7f7f7f"),
-                Red = Hex("#9a0e1b"), RedHover = Hex("#b31220"), RedText = Hex("#c7232f"), RedSoft = Hex("#1b0608"),
+                Accent = Hex("#f0f0f0"), AccentHover = Hex("#ffffff"), AccentText = Hex("#f0f0f0"), AccentSoft = Hex("#1c1c1c"), OnAccent = Hex("#0a0a0a"),
+                Signal = Hex("#9a0e1b"), SignalText = Hex("#c7232f"), SignalSoft = Hex("#1b0608"),
                 Ink = Hex("#f0f0f0"), InkSoft = Hex("#171717"), OnInk = Hex("#0a0a0a"),
             };
         }
@@ -97,7 +99,7 @@ namespace Prh.UnifiedKonverter.Ui
             grid.DefaultCellStyle.BackColor = Bg;
             grid.DefaultCellStyle.ForeColor = Text;
             grid.DefaultCellStyle.Font = Body;
-            grid.DefaultCellStyle.SelectionBackColor = RedSoft;
+            grid.DefaultCellStyle.SelectionBackColor = AccentSoft;
             grid.DefaultCellStyle.SelectionForeColor = Text;
             grid.DefaultCellStyle.Padding = new Padding(8, 0, 8, 0);
         }

@@ -113,7 +113,7 @@ namespace Prh.UnifiedKonverter.Ui
             layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 44));
             layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
 
-            Label eyebrow = new Label { Text = "SCHRITT 3 · NACHBEARBEITUNG", Font = Theme.Eyebrow, ForeColor = _t.RedText, AutoSize = true, Margin = new Padding(0, 0, 0, 6) };
+            Label eyebrow = new Label { Text = "SCHRITT 3 · NACHBEARBEITUNG", Font = Theme.Eyebrow, ForeColor = _t.Text3, AutoSize = true, Margin = new Padding(0, 0, 0, 6) };
             Label title = new Label { Text = "Zu Unified übertragen", Font = Theme.Title, ForeColor = _t.Text, AutoSize = true, Margin = new Padding(0, 0, 0, 6) };
             Label lead = new Label
             {
@@ -259,7 +259,7 @@ namespace Prh.UnifiedKonverter.Ui
             _run.Enabled = target != null && writes > 0;
             _run.Parent?.PerformLayout();
             _status.Text = target == null ? "Keine Unified-HMI im Projekt gefunden – bitte zuerst mit Data2Unified anlegen." : "";
-            _status.ForeColor = target == null ? _t.RedText : _t.Text2;
+            _status.ForeColor = target == null ? _t.SignalText : _t.Text2;
             FillGrid();
         }
 
@@ -292,8 +292,8 @@ namespace Prh.UnifiedKonverter.Ui
             {
                 DataGridViewRow row = new DataGridViewRow();
                 row.CreateCells(_grid, KindText(i.Kind), i.SourceName, i.TargetName, i.Container ?? "", i.StateText, string.Join(" · ", i.Notes));
-                if (i.TargetName != i.SourceName) row.Cells[2].Style.ForeColor = _t.RedText;
-                if (i.State == TransferState.Fehler) { row.Cells[4].Style.ForeColor = _t.RedText; row.Cells[4].Style.Font = Theme.Strong; }
+                if (i.TargetName != i.SourceName) { row.Cells[2].Style.ForeColor = _t.AccentText; row.Cells[2].Style.Font = Theme.Strong; }
+                if (i.State == TransferState.Fehler) { row.Cells[4].Style.ForeColor = _t.SignalText; row.Cells[4].Style.Font = Theme.Strong; }
                 else if (i.State == TransferState.Angelegt || i.State == TransferState.Aktualisiert) row.Cells[4].Style.Font = Theme.Strong;
                 else if (i.State == TransferState.Vorhanden || i.State == TransferState.Übersprungen) row.Cells[4].Style.ForeColor = _t.Text3;
                 rows.Add(row);
@@ -377,7 +377,7 @@ namespace Prh.UnifiedKonverter.Ui
             int failed = items.Count(i => i.State == TransferState.Fehler);
             int notes = items.Count(i => i.State != TransferState.Fehler && i.Notes.Count > 0);
             _status.Text = ok.ToString("N0") + " übertragen" + (failed > 0 ? " · " + failed + " Fehler" : "") + (notes > 0 ? " · " + notes + " mit Hinweisen" : "");
-            _status.ForeColor = failed > 0 ? _t.RedText : _t.Text2;
+            _status.ForeColor = failed > 0 ? _t.SignalText : _t.Text2;
             _filter.SetText(1, "Angelegt");
             FillGrid();
         }
@@ -402,7 +402,7 @@ namespace Prh.UnifiedKonverter.Ui
             catch (Exception ex)
             {
                 _status.Text = "Speichern fehlgeschlagen: " + ex.Message;
-                _status.ForeColor = _t.RedText;
+                _status.ForeColor = _t.SignalText;
             }
         }
     }
@@ -463,11 +463,11 @@ namespace Prh.UnifiedKonverter.Ui
             if (_checked)
             {
                 using (GraphicsPath ring = Draw.Rounded(new RectangleF(0.5f, 0.5f, Width - 1.5f, Height - 1.5f), 11))
-                using (Pen p = new Pen(Draw.Mix(_t.Bg, _t.Red, 0.25f), 3f)) g.DrawPath(p, ring);
+                using (Pen p = new Pen(Draw.Mix(_t.Bg, _t.Accent, 0.25f), 3f)) g.DrawPath(p, ring);
             }
             using (GraphicsPath path = Draw.Rounded(r, 10))
             using (SolidBrush b = new SolidBrush(_t.Bg))
-            using (Pen p = new Pen(_checked ? _t.Red : _t.Border))
+            using (Pen p = new Pen(_checked ? _t.Accent : _t.Border))
             {
                 g.FillPath(b, path);
                 g.DrawPath(p, path);
@@ -477,8 +477,8 @@ namespace Prh.UnifiedKonverter.Ui
             Rectangle box = new Rectangle(Width - 36, 16, 18, 18);
             if (_checked)
             {
-                using (SolidBrush red = new SolidBrush(_t.Red)) g.FillEllipse(red, box);
-                using (Pen white = new Pen(Color.White, 1.8f) { StartCap = LineCap.Round, EndCap = LineCap.Round })
+                using (SolidBrush red = new SolidBrush(_t.Accent)) g.FillEllipse(red, box);
+                using (Pen white = new Pen(_t.OnAccent, 1.8f) { StartCap = LineCap.Round, EndCap = LineCap.Round })
                 {
                     g.DrawLines(white, new[] { new Point(box.X + 5, box.Y + 9), new Point(box.X + 8, box.Y + 12), new Point(box.X + 13, box.Y + 6) });
                 }
@@ -496,7 +496,7 @@ namespace Prh.UnifiedKonverter.Ui
             {
                 Size s = TextRenderer.MeasureText(ActionText, Theme.Strong);
                 _actionBounds = new Rectangle(18, 80, s.Width, 18);
-                TextRenderer.DrawText(g, ActionText, Theme.Strong, new Point(18, 80), _t.RedText, TextFormatFlags.NoPadding);
+                TextRenderer.DrawText(g, ActionText, Theme.Strong, new Point(18, 80), _t.AccentText, TextFormatFlags.NoPadding);
             }
         }
     }

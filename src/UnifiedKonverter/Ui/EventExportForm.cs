@@ -79,7 +79,7 @@ namespace Prh.UnifiedKonverter.Ui
             layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 104));
             layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
 
-            Label eyebrow = new Label { Text = "VARIABLEN INKLUSIVE EVENTS EXPORTIEREN", Font = Theme.Eyebrow, ForeColor = _t.RedText, AutoSize = true, Margin = new Padding(0, 0, 0, 6) };
+            Label eyebrow = new Label { Text = "VARIABLEN INKLUSIVE EVENTS EXPORTIEREN", Font = Theme.Eyebrow, ForeColor = _t.Text3, AutoSize = true, Margin = new Padding(0, 0, 0, 6) };
             Label title = new Label { Text = _scan.HmiDeviceName, Font = Theme.Title, AutoSize = true, Margin = new Padding(0, 0, 0, 8) };
             Label lead = new Label
             {
@@ -182,7 +182,7 @@ namespace Prh.UnifiedKonverter.Ui
             _start.Text = "Erneut exportieren";
             _start.FitWidth();
             _start.Enabled = true;
-            _result.ForeColor = r.Failed > 0 || r.Cancelled ? _t.RedText : _t.Text;
+            _result.ForeColor = r.Failed > 0 || r.Cancelled ? _t.SignalText : _t.Text;
             _result.Text = (r.Cancelled ? "Export abgebrochen – Archiv enthält nur die bis dahin exportierten Variablen" : "Export abgeschlossen") + "\n\n"
                 + "Variablen gefunden:      " + r.Scan.Tags.Count.ToString("N0").PadLeft(8) + "\n"
                 + "Erfolgreich exportiert:  " + r.Successful.ToString("N0").PadLeft(8) + "\n"

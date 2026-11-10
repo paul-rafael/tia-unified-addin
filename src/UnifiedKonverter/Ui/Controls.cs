@@ -122,7 +122,7 @@ namespace Prh.UnifiedKonverter.Ui
             switch (_style)
             {
                 case Style.Primary:
-                    fill = _hover ? _t.RedHover : _t.Red; border = fill; text = Color.White; break;
+                    fill = _hover ? _t.AccentHover : _t.Accent; border = fill; text = _t.OnAccent; break;
                 case Style.Secondary:
                     fill = _hover ? Draw.Mix(_t.Ink, _t.Bg, 0.2f) : _t.Ink; border = fill; text = _t.OnInk; break;
                 default:
@@ -191,7 +191,7 @@ namespace Prh.UnifiedKonverter.Ui
                 g.FillPath(b, path);
                 g.DrawPath(p, path);
             }
-            Color valueColor = Accent && Value > 0 ? _t.RedText : _t.Text;
+            Color valueColor = Accent && Value > 0 ? _t.SignalText : _t.Text;
             TextRenderer.DrawText(g, Value.ToString("N0"), Theme.Number, new Point(16, 10), valueColor, TextFormatFlags.NoPadding);
             TextRenderer.DrawText(g, Label, Theme.Small, new Point(17, 50), _t.Text3, TextFormatFlags.NoPadding);
         }
@@ -241,7 +241,7 @@ namespace Prh.UnifiedKonverter.Ui
                     i == Selected ? _t.Text : _t.Text3, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
                 if (i == Selected)
                 {
-                    using (SolidBrush red = new SolidBrush(_t.Red))
+                    using (SolidBrush red = new SolidBrush(_t.Accent))
                     {
                         e.Graphics.FillRectangle(red, r.X, Height - 2, r.Width, 2);
                     }
